@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'ZendXml' => array($vendorDir . '/zendframework/zendxml/library'),
+    'PHPExcel' => array($vendorDir . '/phpoffice/phpexcel/Classes'),
 );
