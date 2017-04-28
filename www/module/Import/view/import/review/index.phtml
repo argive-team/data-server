@@ -56,75 +56,76 @@ $(function() {
 		init : {
 			PostInit: function() {
 				// Called after initialization is finished and internal event handlers bound
-				log('[PostInit]');
+				//log('[PostInit]');
 			},
 
 			Browse: function(up) {
                 // Called when file picker is clicked
-                log('[Browse]');
+                //log('[Browse]');
             },
 
             Refresh: function(up) {
                 // Called when the position or dimensions of the picker change
-                log('[Refresh]');
+                //log('[Refresh]');
             },
  
             StateChanged: function(up) {
                 // Called when the state of the queue is changed
-                log('[StateChanged]', up.state == plupload.STARTED ? "STARTED" : "STOPPED");
+                //log('[StateChanged]', up.state == plupload.STARTED ? "STARTED" : "STOPPED");
             },
  
             QueueChanged: function(up) {
                 // Called when queue is changed by adding or removing files
-                log('[QueueChanged]');
+                //log('[QueueChanged]');
             },
 
 			OptionChanged: function(up, name, value, oldValue) {
 				// Called when one of the configuration options is changed
-				log('[OptionChanged]', 'Option Name: ', name, 'Value: ', value, 'Old Value: ', oldValue);
+				//log('[OptionChanged]', 'Option Name: ', name, 'Value: ', value, 'Old Value: ', oldValue);
 			},
 
 			BeforeUpload: function(up, file) {
 				// Called right before the upload for a given file starts, can be used to cancel it if required
-				log('[BeforeUpload]', 'File: ', file);
+				//log('[BeforeUpload]', 'File: ', file);
 			},
  
             UploadProgress: function(up, file) {
                 // Called while file is being uploaded
-                log('[UploadProgress]', 'File:', file, "Total:", up.total);
+                //log('[UploadProgress]', 'File:', file, "Total:", up.total);
             },
 
 			FileFiltered: function(up, file) {
 				// Called when file successfully files all the filters
-                log('[FileFiltered]', 'File:', file);
+                //log('[FileFiltered]', 'File:', file);
 			},
  
             FilesAdded: function(up, files) {
                 // Called when files are added to queue
-                log('[FilesAdded]');
+                //log('[FilesAdded]');
  
-                plupload.each(files, function(file) {
-                    log('  File:', file);
-                });
+                //plupload.each(files, function(file) {
+                //    log('  File:', file);
+                //});
             },
  
             FilesRemoved: function(up, files) {
                 // Called when files are removed from queue
-                log('[FilesRemoved]');
+                //log('[FilesRemoved]');
  
-                plupload.each(files, function(file) {
-                    log('  File:', file);
-                });
+                //plupload.each(files, function(file) {
+                //    log('  File:', file);
+                //});
             },
  
             FileUploaded: function(up, file, info) {
                 // Called when file has finished uploading
-                log('[FileUploaded] File:', file, "Info:", info);
+                //log('[FileUploaded] File:', file, "Info:", info);
+				log('[FileUploaded] File:', file);
             },
  
             ChunkUploaded: function(up, file, info) {
                 // Called when file chunk has finished uploading
-                log('[ChunkUploaded] File:', file, "Info:", info);
+                //log('[ChunkUploaded] File:', file, "Info:", info);
             },
 
 			UploadComplete: function(up, files) {
@@ -137,7 +138,7 @@ $(function() {
 
 			Destroy: function(up) {
 				// Called when uploader is destroyed
-                log('[Destroy] ');
+                //log('[Destroy] ');
 			},
  
             Error: function(up, args) {
