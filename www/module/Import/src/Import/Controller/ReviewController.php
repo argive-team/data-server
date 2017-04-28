@@ -34,8 +34,8 @@ class ReviewController extends AbstractActionController
         $config = $this->config;
         
         // Settings
-        $targetDir = $config['argive']['upload_reviews_dir'];
-        $cleanupTargetDir = true; // Remove old files
+        $targetDir = $config['argive']['reviews']['upload_dir'];
+        $cleanupTargetDir = $config['argive']['reviews']['cleanup_dir']; // Remove old files
         $maxFileAge = 5 * 3600;   // Temp file age in seconds
         
         // Get a file name
@@ -141,27 +141,29 @@ class ReviewController extends AbstractActionController
         $config = $this->config;
         
         // Settings
-        $targetDir = $config['argive']['upload_reviews_dir'];
+        $targetDir = $config['argive']['reviews']['upload_dir'];
         $sheetIndex = 0;
         
-        $inputFileName = $targetDir . DIRECTORY_SEPARATOR . 'Argive_ T_REVIEW Import Template.csv';
+        $files = glob($targetDir . DIRECTORY_SEPARATOR . '*.[cC][sS][vV]', GLOB_BRACE);
         
-        $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
-        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-        
-        try {
-            $objPHPExcel = $objReader->load($inputFileName);
-        } catch (\Exception $e) {
-            // [TODO: Need to add error message to page]
-            return array();
-        }
-        
-        $sheet = $objPHPExcel->getSheet($sheetIndex);
-        $highestRow = $sheet->getHighestRow();
-        $highestColumn = $sheet->getHighestColumn();
-        
-        for ($row = 1; $row <= $highestRow; $row++) {
-            $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
+        foreach ($files as $inputFileName) {
+            $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
+            $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+            
+            try {
+                $objPHPExcel = $objReader->load($inputFileName);
+            } catch (\Exception $e) {
+                // [TODO: Need to add error message to page]
+                return array();
+            }
+            
+            $sheet = $objPHPExcel->getSheet($sheetIndex);
+            $highestRow = $sheet->getHighestRow();
+            $highestColumn = $sheet->getHighestColumn();
+            
+            for ($row = 1; $row <= $highestRow; $row++) {
+                $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
+            }
         }
         
         return array();
