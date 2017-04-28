@@ -12,4 +12,7 @@
  */
 
 return array(
+    'argive' => array(
+        'upload_reviews_dir' => '/home/argive/prod/data-server/www/uploads/reviews'
+    )
 );

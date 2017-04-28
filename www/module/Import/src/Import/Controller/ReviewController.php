@@ -15,6 +15,13 @@ use Zend\Mvc\Controller\AbstractActionController;
 
 class ReviewController extends AbstractActionController
 {
+    protected $config;
+    
+    public function __construct($config)
+    {
+        $this->config= $config;
+    }
+    
     public function indexAction()
     {
         return array();
@@ -24,8 +31,10 @@ class ReviewController extends AbstractActionController
     {
         $request = $this->getRequest();
         
+        $config = $this->config;
+        
         // Settings
-        $targetDir = "/Users/Duc/argive/git-repos/data-server/www/uploads/reviews";
+        $targetDir = $config['argive']['upload_reviews_dir'];
         $cleanupTargetDir = true; // Remove old files
         $maxFileAge = 5 * 3600;   // Temp file age in seconds
         
@@ -129,8 +138,10 @@ class ReviewController extends AbstractActionController
     
     public function importAction()
     {
+        $config = $this->config;
+        
         // Settings
-        $targetDir = "/Users/Duc/argive/git-repos/data-server/www/uploads/reviews";
+        $targetDir = $config['argive']['upload_reviews_dir'];
         $sheetIndex = 0;
         
         $inputFileName = $targetDir . DIRECTORY_SEPARATOR . 'Argive_ T_REVIEW Import Template.csv';

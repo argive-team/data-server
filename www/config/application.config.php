@@ -1,14 +1,21 @@
 <?php
+$env = getenv('APPLICATION_ENV') ?: 'production';
+
+// Use the $env value to determine which modules to load
+$modules = array(
+    'DoctrineModule',
+    'DoctrineORMModule',
+    'Application',
+    'Import',
+);
+if ($env == 'development') {
+    $modules[] = 'ZendDeveloperTools';
+    $modules[] = 'SanSessionToolbar';
+}
+
 return array(
     // This should be an array of module namespaces used in the application.
-    'modules' => array(
-        'DoctrineModule',
-        'DoctrineORMModule',
-        'Application',
-        'Import',
-        'ZendDeveloperTools',
-        'SanSessionToolbar',
-    ),
+    'modules' => $modules,
 
     // These are various options for the listeners attached to the ModuleManager
     'module_listener_options' => array(

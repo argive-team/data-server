@@ -2,7 +2,10 @@
 return array(
     'controllers' => array(
         'invokables' => array(
-            'Import\Controller\Review' => 'Import\Controller\ReviewController',
+            //'Import\Controller\Review' => 'Import\Controller\ReviewController',
+        ),
+        'factories' => array(
+            'Import\Controller\Review' => 'Import\Factory\Controller\ReviewControllerFactory',
         ),
     ),
     'router' => array(
