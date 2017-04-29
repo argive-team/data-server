@@ -24,3 +24,4 @@ class ReviewControllerFactory implements FactoryInterface
         return new ReviewController($config, $em);
     }
 }
+

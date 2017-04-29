@@ -7,8 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  * @ORM\Table(name="T_REVIEW",
- *      indexes={@ORM\Index(name="id_UNIQUE", columns={"id"})}
- * )
+ *      uniqueConstraints={@ORM\UniqueConstraint(name="id_UNIQUE", columns={"id"})}
+ *      )
  */
 class Review
 {
@@ -89,6 +89,34 @@ class Review
     
     /** @ORM\Column(length=255, options={"default":"USER"}) */
     protected $origin;
+    
+    /**
+     * @ORM\ManyToMany(targetEntity="Feedback", fetch="EAGER")
+     * @ORM\JoinTable(name="T_REVIEW_has_T_FEEDBACK_CD",
+     *      joinColumns={@ORM\JoinColumn(name="review_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="feedback_key", referencedColumnName="feedback_key")}
+     *      )
+     */
+    // [TODO: Need to figure out how to name the foreign key indices]
+    protected $feedbacks;
+    
+    /**
+     * @ORM\ManyToMany(targetEntity="Action", fetch="EAGER")
+     * @ORM\JoinTable(name="T_REVIEW_has_T_ACTION_CD",
+     *      joinColumns={@ORM\JoinColumn(name="review_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="action_key", referencedColumnName="action_key")}
+     *      )
+     */
+    // [TODO: Need to figure out how to name the foreign key indices]
+    protected $actions;
+    
+    public function __construct()
+    {
+        date_default_timezone_set('UTC');
+        
+        $this->feedbacks = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->actions = new \Doctrine\Common\Collections\ArrayCollection();
+    }
     
     public function getId()
     {
@@ -345,15 +373,8 @@ class Review
         $this->origin = $origin;
     }
     
-    public function __construct()
+    public function exchangeData($data = array(), $entityManager)
     {
-        date_default_timezone_set('UTC');
-    }
-    
-    public function exchangeData($data = array())
-    {
-        //$data = array_filter($data, function($value) { return $value != null; });
-        
         $this->id = $data['id'];
         $this->isReviewed = ($data['is_reviewed'] == null ? 0 : 1);
         $this->reviewType = Replace::replaceNullWithAlt($data['review_type'], 'CFR');
@@ -380,6 +401,30 @@ class Review
         $this->suggestedAction = Replace::replaceNullWithAlt($data['suggested_action'], '');
         $this->complaintStatus = Replace::replaceNullWithAlt($data['complaint_status'], 'OPEN');
         $this->origin = Replace::replaceNullWithAlt($data['origin'], 'USER');
+        
+        if (!empty($data['feedback_key'])) {
+            $codes = explode(',', $data['feedback_key']);
+            foreach ($codes as $code) {
+                // [TODO: Is there exception to catch if fail?]
+                $feedback = $entityManager->find('Application\Entity\Feedback', $code);
+                // [TODO: Log invalid code]
+                if (!is_null($feedback)) {
+                    $this->feedbacks->add($feedback);
+                }
+            }
+        }
+        
+        if (!empty($data['action_key'])) {
+            $codes = explode(',', $data['action_key']);
+            foreach ($codes as $code) {
+                // [TODO: Is there exception to catch if fail?]
+                $action = $entityManager->find('Application\Entity\Action', $code);
+                // [TODO: Log invalid code]
+                if (!is_null($action)) {
+                    $this->actions->add($action);
+                }
+            }
+        }
     }
 }
 

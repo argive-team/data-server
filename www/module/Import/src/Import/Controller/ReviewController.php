@@ -170,7 +170,7 @@ class ReviewController extends AbstractActionController
                 $data = array_combine($rowHeader[0], $rowData[0]);
                 
                 $review = new Review();
-                $review->exchangeData($data);
+                $review->exchangeData($data, $this->em);
                 $this->em->persist($review);
                 $this->em->flush();
             }
@@ -181,3 +181,4 @@ class ReviewController extends AbstractActionController
         return array();
     }
 }
+
