@@ -19,7 +19,8 @@ class ReviewControllerFactory implements FactoryInterface
     {
         $parentLocator = $container->getServiceLocator();
         $config = $parentLocator->get('Config');
+        $em = $parentLocator->get('doctrine.entitymanager.orm_default');
         
-        return new ReviewController($config);
+        return new ReviewController($config, $em);
     }
 }

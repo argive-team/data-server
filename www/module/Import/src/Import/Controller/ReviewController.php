@@ -12,14 +12,17 @@ namespace Import\Controller;
 use PHPExcel_IOFactory;
 use Zend\Http\Response;
 use Zend\Mvc\Controller\AbstractActionController;
+use Application\Entity\Review;
 
 class ReviewController extends AbstractActionController
 {
     protected $config;
+    protected $em;
     
-    public function __construct($config)
+    public function __construct($config, $em)
     {
-        $this->config= $config;
+        $this->config = $config;
+        $this->em = $em;
     }
     
     public function indexAction()
@@ -160,10 +163,19 @@ class ReviewController extends AbstractActionController
             $sheet = $objPHPExcel->getSheet($sheetIndex);
             $highestRow = $sheet->getHighestRow();
             $highestColumn = $sheet->getHighestColumn();
+            $rowHeader = $sheet->rangeToArray('A1:' . $highestColumn . 1);
             
-            for ($row = 1; $row <= $highestRow; $row++) {
+            for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
+                $data = array_combine($rowHeader[0], $rowData[0]);
+                
+                $review = new Review();
+                $review->exchangeData($data);
+                $this->em->persist($review);
+                $this->em->flush();
             }
+            
+            // [TODO: Move file to completed folder]
         }
         
         return array();
