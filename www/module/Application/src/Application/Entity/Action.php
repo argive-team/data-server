@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="T_ACTION_CD",
  *      uniqueConstraints={@ORM\UniqueConstraint(name="action_key_UNIQUE", columns={"action_key"})}
- * )
+ *      )
  */
 class Action
 {

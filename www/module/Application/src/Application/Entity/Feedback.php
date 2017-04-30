@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="T_FEEDBACK_CD",
  *      uniqueConstraints={@ORM\UniqueConstraint(name="feedback_key_UNIQUE", columns={"feedback_key"})}
- * )
+ *      )
  */
 class Feedback
 {

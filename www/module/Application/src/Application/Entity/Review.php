@@ -28,7 +28,7 @@ class Review
     protected $federalRegisterId;
     
     /**
-     * @ORM\ManyToOne(targetEntity="StateCode")
+     * @ORM\ManyToOne(targetEntity="StateCode", fetch="EAGER")
      * @ORM\JoinColumn(name="state_code_id", referencedColumnName="id")
      */
     protected $stateCode;

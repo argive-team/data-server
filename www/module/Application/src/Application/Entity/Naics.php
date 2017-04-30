@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="T_NAICS",
  *      uniqueConstraints={@ORM\UniqueConstraint(name="NAICS_code_UNIQUE", columns={"NAICS_code"})}
- * )
+ *      )
  */
 class Naics
 {

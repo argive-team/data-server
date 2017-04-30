@@ -17,52 +17,55 @@ class StateCode
     /** @ORM\Column(name="document_title", length=2048) */
     protected $documentTitle;
     
-    /** @ORM\Column(name="state", length=2) */
+    /** @ORM\Column(length=2) */
     protected $state;
     
-    /** @ORM\Column(name="year", type="integer") */
+    /** @ORM\Column(type="integer") */
     protected $year;
     
-    /** @ORM\Column(name="title", length=2048) */
+    /** @ORM\Column(length=2048) */
     protected $title;
     
-    /** @ORM\Column(name="part", length=255) */
+    /** @ORM\Column(length=255) */
     protected $part;
     
-    /** @ORM\Column(name="chapter", length=255) */
+    /** @ORM\Column(length=255) */
     protected $chapter;
     
     /** @ORM\Column(name="file_name", length=255) */
-    protected $file_name;
+    protected $fileName;
     
-    /** @ORM\Column(name="wordcount", type="integer") */
+    /** @ORM\Column(type="integer") */
     protected $wordcount;
     
-    /** @ORM\Column(name="section", length=255) */
+    /** @ORM\Column(length=255) */
     protected $section;
     
-    /** @ORM\Column(name="regNumber", length=255) */
+    /** @ORM\Column(name="reg_number", length=255) */
     protected $regNumber;
     
-    /** @ORM\Column(name="division", length=255) */
+    /** @ORM\Column(length=255) */
     protected $division;
     
-    /** @ORM\Column(name="agency_id", type="integer") */
-    protected $agencyId;
+    /**
+     * @ORM\ManyToOne(targetEntity="Agency", fetch="EAGER")
+     * @ORM\JoinColumn(name="agency_id", referencedColumnName="id")
+     */
+    protected $agency;
     
-    /** @ORM\Column(name="shall", type="integer", nullable=true) */
+    /** @ORM\Column(type="integer", nullable=true) */
     protected $shall;
     
-    /** @ORM\Column(name="must", type="integer") */
+    /** @ORM\Column(type="integer") */
     protected $must;
     
     /** @ORM\Column(name="may_not", type="integer") */
     protected $mayNot;
     
-    /** @ORM\Column(name="required", type="integer") */
+    /** @ORM\Column(type="integer") */
     protected $required;
     
-    /** @ORM\Column(name="prohibited", type="integer") */
+    /** @ORM\Column(type="integer") */
     protected $prohibited;
     
     /** @ORM\Column(name="restrictions_total", type="integer") */
@@ -111,9 +114,9 @@ class StateCode
         return $this->chapter;
     }
 
-    public function getFile_name()
+    public function getFileName()
     {
-        return $this->file_name;
+        return $this->fileName;
     }
 
     public function getWordcount()
@@ -206,9 +209,9 @@ class StateCode
         $this->chapter = $chapter;
     }
 
-    public function setFile_name($file_name)
+    public function setFileName($fileName)
     {
-        $this->file_name = $file_name;
+        $this->fileName = $fileName;
     }
 
     public function setWordcount($wordcount)
