@@ -27,8 +27,11 @@ class Review
     /** @ORM\Column(name="federal_register_id", type="integer", nullable=true) */
     protected $federalRegisterId;
     
-    /** @ORM\Column(name="state_code_id", type="integer", nullable=true) */
-    protected $stateCodeId;
+    /**
+     * @ORM\ManyToOne(targetEntity="StateCode")
+     * @ORM\JoinColumn(name="state_code_id", referencedColumnName="id")
+     */
+    protected $stateCode;
     
     /** @ORM\Column(name="statute_id", type="integer", nullable=true) */
     protected $statuteId;
@@ -75,8 +78,11 @@ class Review
     /** @ORM\Column(name="num_fte_us_employees", type="integer", nullable=true) */
     protected $numFteUsEmployees;
     
-    /** @ORM\Column(name="NAICS_code", length=6) */
-    protected $NAICSCode;
+    /** 
+     * @ORM\ManyToOne(targetEntity="Naics")
+     * @ORM\JoinColumn(name="NAICS_code", referencedColumnName="NAICS_code")
+     */
+    protected $naics;
     
     /** @ORM\Column(name="user_comments", length=4000) */
     protected $userComments;
@@ -97,7 +103,6 @@ class Review
      *      inverseJoinColumns={@ORM\JoinColumn(name="feedback_key", referencedColumnName="feedback_key")}
      *      )
      */
-    // [TODO: Need to figure out how to name the foreign key indices]
     protected $feedbacks;
     
     /**
@@ -107,7 +112,6 @@ class Review
      *      inverseJoinColumns={@ORM\JoinColumn(name="action_key", referencedColumnName="action_key")}
      *      )
      */
-    // [TODO: Need to figure out how to name the foreign key indices]
     protected $actions;
     
     public function __construct()
@@ -380,7 +384,14 @@ class Review
         $this->reviewType = Replace::replaceNullWithAlt($data['review_type'], 'CFR');
         $this->cfrId = $data['cfr_id'];
         $this->federalRegisterId = $data['federal_register_id'];
-        $this->stateCodeId = $data['state_code_id'];
+        
+        if (!empty($data['state_code_id'])) {
+            $stateCode= $entityManager->find('Application\Entity\StateCode', $data['state_code_id']);
+            if (!is_null($stateCode)) {
+                $this->stateCode = $stateCode;
+            }
+        }
+        
         $this->statuteId = $data['statute_id'];
         $this->commentAt = Replace::replaceNullWithAlt(\DateTime::createFromFormat('Y-m-d H:i:s', $data['comment_at']), new \DateTime());
         $this->userType = Replace::replaceNullWithAlt($data['user_type'], 'BUSINESS_OWNER');
@@ -396,7 +407,14 @@ class Review
         $this->email = Replace::replaceNullWithAlt($data['email'], '');
         $this->isEmailAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_email_anonymity_requested']);
         $this->numFteUsEmployees = $data['num_fte_us_employees'];
-        $this->NAICSCode = Replace::replaceNullWithAlt($data['NAICS_code'], '');;
+        
+        if (!empty($data['NAICS_code'])) {
+            $naics = $entityManager->find('Application\Entity\Naics', $data['NAICS_code']);
+            if (!is_null($naics)) {
+                $this->naics = $naics;
+            }
+        }
+        
         $this->userComments = Replace::replaceNullWithAlt($data['user_comments'], '');
         $this->suggestedAction = Replace::replaceNullWithAlt($data['suggested_action'], '');
         $this->complaintStatus = Replace::replaceNullWithAlt($data['complaint_status'], 'OPEN');

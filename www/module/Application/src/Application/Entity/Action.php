@@ -34,12 +34,7 @@ class Action
     {
         return $this->category;
     }
-
-    public function getSpecifics()
-    {
-        return $this->specifics;
-    }
-
+    
     public function setActionKey($actionKey)
     {
         $this->actionKey = $actionKey;
@@ -53,18 +48,6 @@ class Action
     public function setCategory($category)
     {
         $this->category = $category;
-    }
-
-    public function setSpecifics($specifics)
-    {
-        $this->specifics = $specifics;
-    }
-
-    public function exchangeData($data = array())
-    {
-        $this->actionKey = $data['actionKey'];
-        $this->tone = $data['tone'];
-        $this->category = $data['category'];
     }
 }
 

@@ -62,13 +62,5 @@ class Feedback
     {
         $this->specifics = $specifics;
     }
-
-    public function exchangeData($data = array())
-    {
-        $this->feedbackKey = $data['feedbackKey'];
-        $this->tone = $data['tone'];
-        $this->category = $data['category'];
-        $this->specifics = $data['specifics'];
-    }
 }
 

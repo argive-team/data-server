@@ -12,6 +12,19 @@
  */
 
 return array(
+    'doctrine' => array(
+        'connection' => array(
+            'orm_default' => array(
+                'driverClass' => 'Doctrine\DBAL\Driver\PDOMySql\Driver',
+                'params' => array(
+                    'host'     => '127.0.0.1',
+                    'port'     => '3306',
+                    'dbname'   => 'ARGIVE',
+                    'charset'  => 'utf8',
+                )
+            )
+        )
+    ),
     'argive' => array(
         'reviews' => array(
             'upload_dir' => '/home/argive/prod/data-server/www/uploads/reviews',
