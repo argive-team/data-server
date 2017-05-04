@@ -10,4 +10,16 @@
             </div>
         </div>
     </div>
+    
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><?php echo $this->translate('Export Reviews') ?></h3>
+            </div>
+            <div class="panel-body">
+                <p><?php echo sprintf($this->translate('Download reviews as .csv file.  You can then import into Google Sheets/Excel to modify the data.  Once complete, you can re-import an updated .csv file.'), '</a>') ?></p>
+                <p><a class="btn btn-success pull-right" href="<?php echo $this->url('export', array()); ?>"><?php echo $this->translate('Download') ?> &raquo;</a></p>
+            </div>
+        </div>
+    </div>
 </div>

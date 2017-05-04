@@ -6,6 +6,7 @@ $modules = array(
     'DoctrineModule',
     'DoctrineORMModule',
     'Application',
+    'Export',
     'Import',
 );
 if ($env == 'development') {

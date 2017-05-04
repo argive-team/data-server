@@ -1,9 +1,9 @@
 <?php
-namespace Import\Factory\Controller;
+namespace Export\Factory\Controller;
 
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
-use Import\Controller\ReviewController;
+use Export\Controller\ReviewController;
 
 class ReviewControllerFactory implements FactoryInterface
 {
