@@ -146,6 +146,7 @@ $(function() {
                 log('[Error] ', args);
 
 				$('#uploader').plupload('notify', 'error', args['response']);
+				$('#uploader').plupload('stop');
             }
 		}		
 	});
