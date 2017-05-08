@@ -42,5 +42,23 @@ class Module implements AutoloaderProviderInterface
         $eventManager        = $e->getApplication()->getEventManager();
         $moduleRouteListener = new ModuleRouteListener();
         $moduleRouteListener->attach($eventManager);
+        
+        $sharedEvents = $e->getApplication()->getEventManager()->getSharedManager();
+        $sm = $e->getApplication()->getServiceManager();
+        
+        $sharedEvents->attach(__NAMESPACE__, MvcEvent::EVENT_DISPATCH, function($e) use ($sm) {
+            $strategy = $sm->get('CsvStrategy');
+            $view = $sm->get('ViewManager')->getView();
+            $strategy->attach($view->getEventManager());
+        }, 100);
+    }
+    
+    public function getServiceConfig()
+    {
+        return array(
+            'factories' => array(
+                'CsvStrategy' => 'Export\Factory\View\CsvFactory',
+            )
+        );
     }
 }

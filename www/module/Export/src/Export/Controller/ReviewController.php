@@ -10,11 +10,29 @@
 namespace Export\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
 
 class ReviewController extends AbstractActionController
 {
+    protected $config;
+    protected $em;
+    
+    public function __construct($config, $em)
+    {
+        $this->config = $config;
+        $this->em = $em;
+    }
+    
     public function indexAction()
     {
-        return array();
+        date_default_timezone_set('America/Los_Angeles');
+        
+        $results = $this->em->getRepository('Application\Entity\Review')->findAll();
+        
+        $model = new ViewModel(array('results' => $results));
+        $model->setTemplate('export/download/review-csv.phtml')
+            ->setTerminal(true);
+        
+        return $model;
     }
 }

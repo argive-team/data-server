@@ -5,7 +5,7 @@ return array(
             //'Export\Controller\Review' => 'Export\Controller\ReviewController',
         ),
         'factories' => array(
-            'Export\Controller\Revview' => 'Export\Factory\Controller\ReviewControllerFactory',
+            'Export\Controller\Review' => 'Export\Factory\Controller\ReviewControllerFactory',
         )
     ),
     'router' => array(

@@ -1,0 +1,13 @@
+<?php
+$isFirst = true;
+if (count($this->results) > 0) {
+    $fh = @fopen( 'php://output', 'w' );
+    foreach ($this->results as $result) {
+        if ($isFirst) {
+            $isFirst = false;
+            fputcsv($fh, $result->getCsvColumnHeader());
+        }
+        fputcsv($fh, $result->getCsvArray());
+    }
+    fclose($fh);
+}

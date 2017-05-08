@@ -147,9 +147,9 @@ class Review
         return $this->federalRegisterId;
     }
 
-    public function getStateCodeId()
+    public function getStateCode()
     {
-        return $this->stateCodeId;
+        return $this->stateCode;
     }
 
     public function getStatuteId()
@@ -227,9 +227,9 @@ class Review
         return $this->numFteUsEmployees;
     }
 
-    public function getNAICSCode()
+    public function getNaics()
     {
-        return $this->NAICSCode;
+        return $this->naics;
     }
 
     public function getUserComments()
@@ -251,7 +251,17 @@ class Review
     {
         return $this->origin;
     }
-
+    
+    public function getFeedbacks()
+    {
+        return $this->feedbacks;
+    }
+    
+    public function getActions()
+    {
+        return $this->actions;
+    }
+    
     public function setIsReviewed($isReviewed)
     {
         $this->isReviewed = $isReviewed;
@@ -272,9 +282,9 @@ class Review
         $this->federalRegisterId = $federalRegisterId;
     }
 
-    public function setStateCodeId($stateCodeId)
+    public function setStateCode($stateCode)
     {
-        $this->stateCodeId = $stateCodeId;
+        $this->stateCode = $stateCode;
     }
 
     public function setStatuteId($statuteId)
@@ -352,9 +362,9 @@ class Review
         $this->numFteUsEmployees = $numFteUsEmployees;
     }
 
-    public function setNAICSCode($NAICSCode)
+    public function setNaics($naics)
     {
-        $this->NAICSCode = $NAICSCode;
+        $this->naics = $naics;
     }
 
     public function setUserComments($userComments)
@@ -375,6 +385,16 @@ class Review
     public function setOrigin($origin)
     {
         $this->origin = $origin;
+    }
+    
+    public function setFeedbacks($feedbacks)
+    {
+        $this->feedbacks = $feedbacks;
+    }
+    
+    public function setActions($actions)
+    {
+        $this->actions = $actions;
     }
     
     public function exchangeData($data = array(), $entityManager)
@@ -443,6 +463,72 @@ class Review
                 }
             }
         }
+    }
+    
+    public function getCsvColumnHeader()
+    {
+        return array(
+            'id', 'is_reviewed', 'review_type', 'cfr_id', 'federal_register_id', 'state_code_id', 'statute_id', 'comment_at', 'user_type', 'first_name', 'last_name',
+            'is_user_anonymity_requested', 'business_name', 'is_business_anonymity_requested', 'organization_name', 'is_organization_anonymity_requested',
+            'zipcode', 'is_zipcode_anonymity_requested', 'email', 'is_email_anonymity_requested', 'num_fte_us_employees', 'NAICS_code', 'user_comments',
+            'suggested_action', 'complaint_status', 'origin', 'feedback_key', 'action_key'
+        );
+    }
+    
+    private function getFeedbacksAsDelimitedStr()
+    {
+        $result = '';
+        
+        foreach ($this->feedbacks as $feedback) {
+            $result .= $feedback->getFeedbackKey() . ',';
+        }
+        
+        return rtrim($result, ',');
+    }
+    
+    private function getActionsAsDelimitedStr()
+    {
+        $result = '';
+        
+        foreach ($this->actions as $action) {
+            $result .= $action->getActionKey() . ',';
+        }
+        
+        return rtrim($result, ',');
+    }
+    
+    public function getCsvArray()
+    {
+        return array(
+            $this->id,
+            $this->isReviewed,
+            $this->reviewType,
+            $this->cfrId,
+            $this->federalRegisterId,
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
+            $this->statuteId,
+            $this->commentAt->format('Y-m-d H:i:s'),
+            $this->userType,
+            $this->firstName,
+            $this->lastName,
+            $this->isUserAnonymityRequested,
+            $this->businessName,
+            $this->isBusinessAnonymityRequested,
+            $this->organizationName,
+            $this->isOrganizationAnonymityRequested,
+            $this->zipcode,
+            $this->isZipcodeAnonymityRequested,
+            $this->email,
+            $this->isEmailAnonymityRequested,
+            $this->numFteUsEmployees,
+            (is_null($this->naics) ? '' : $this->naics->getNAICSCode()),
+            $this->userComments,
+            $this->suggestedAction,
+            $this->complaintStatus,
+            $this->origin,
+            (count($this->feedbacks) == 0 ? '' : $this->getFeedbacksAsDelimitedStr()),
+            (count($this->actions) == 0 ? '' : $this->getActionsAsDelimitedStr()),
+        );
     }
 }
 
