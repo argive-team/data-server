@@ -13,6 +13,7 @@ use PHPExcel_IOFactory;
 use Zend\Http\Response;
 use Zend\Mvc\Controller\AbstractActionController;
 use Application\Entity\Review;
+use Zend\Filter\File\RenameUpload;
 
 class ReviewController extends AbstractActionController
 {
@@ -21,6 +22,8 @@ class ReviewController extends AbstractActionController
     
     public function __construct($config, $em)
     {
+        date_default_timezone_set('America/Los_Angeles');
+        
         $this->config = $config;
         $this->em = $em;
     }
@@ -37,7 +40,7 @@ class ReviewController extends AbstractActionController
         $config = $this->config;
         
         // Settings
-        $targetDir = $config['argive']['reviews']['upload_dir'];
+        $uploadDir = $config['argive']['reviews']['upload_dir'];
         $cleanupTargetDir = $config['argive']['reviews']['cleanup_dir']; // Remove old files
         $maxFileAge = 5 * 3600;   // Temp file age in seconds
         
@@ -50,7 +53,7 @@ class ReviewController extends AbstractActionController
 	       $fileName = uniqid("file_");
         }
         
-        $filePath = $targetDir . DIRECTORY_SEPARATOR . $fileName;
+        $filePath = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
         
         // Chunking might be enabled
         $chunk = isset($_REQUEST["chunk"]) ? intval($_REQUEST["chunk"]) : 0;
@@ -58,7 +61,7 @@ class ReviewController extends AbstractActionController
         
         // Remove old temp files
         if ($cleanupTargetDir) {
-            if (!is_dir($targetDir) || !$dir = opendir($targetDir)) {
+            if (!is_dir($uploadDir) || !$dir = opendir($uploadDir)) {
                 $json = '{"jsonrpc" : "2.0", "error" : {"code": 100, "message": "Failed to open temp directory."}, "id" : "id"}';
                 $this->response->setContent($json);
                 $this->response->setStatusCode(Response::STATUS_CODE_500);
@@ -67,7 +70,7 @@ class ReviewController extends AbstractActionController
             }
             
             while (($file = readdir($dir)) !== false) {
-                $tmpfilePath = $targetDir . DIRECTORY_SEPARATOR . $file;
+                $tmpfilePath = $uploadDir . DIRECTORY_SEPARATOR . $file;
                 
                 // If temp file is current file proceed to the next
                 if ($tmpfilePath == "{$filePath}.part") {
@@ -144,10 +147,11 @@ class ReviewController extends AbstractActionController
         $config = $this->config;
         
         // Settings
-        $targetDir = $config['argive']['reviews']['upload_dir'];
+        $uploadDir = $config['argive']['reviews']['upload_dir'];
+        $completedDir = $config['argive']['reviews']['completed_dir'];
         $sheetIndex = 0;
         
-        $files = glob($targetDir . DIRECTORY_SEPARATOR . '*.[cC][sS][vV]', GLOB_BRACE);
+        $files = glob($uploadDir . DIRECTORY_SEPARATOR . '*.[cC][sS][vV]', GLOB_BRACE);
         
         foreach ($files as $inputFileName) {
             $inputFileType = PHPExcel_IOFactory::identify($inputFileName);
@@ -169,13 +173,21 @@ class ReviewController extends AbstractActionController
                 $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
                 $data = array_combine($rowHeader[0], $rowData[0]);
                 
-                $review = new Review();
+                $review = null;
+                if ($data['id'] != null) {
+                    $review = $this->em->find('Application\Entity\Review', $data['id']);
+                } else {
+                    // [TODO: Log error.  Invalid id.]
+                }
+                if (is_null($review)) {
+                    $review = new Review();
+                }
                 $review->exchangeData($data, $this->em);
                 $this->em->persist($review);
                 $this->em->flush();
             }
             
-            // [TODO: Move file to completed folder]
+            rename($inputFileName, $completedDir . '/' . basename($inputFileName));
         }
         
         return array();

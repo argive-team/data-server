@@ -19,14 +19,14 @@ class ReviewController extends AbstractActionController
     
     public function __construct($config, $em)
     {
+        date_default_timezone_set('America/Los_Angeles');
+        
         $this->config = $config;
         $this->em = $em;
     }
     
     public function indexAction()
     {
-        date_default_timezone_set('America/Los_Angeles');
-        
         $results = $this->em->getRepository('Application\Entity\Review')->findAll();
         
         $model = new ViewModel(array('results' => $results));

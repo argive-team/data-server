@@ -28,6 +28,7 @@ return array(
     'argive' => array(
         'reviews' => array(
             'upload_dir' => '/home/argive/prod/data-server/www/uploads/reviews',
+            'completed_dir' => '/home/argive/prod/data-server/www/uploads/reviews/completed',
             'cleanup_dir' => true,
         )
     )

@@ -399,13 +399,14 @@ class Review
     
     public function exchangeData($data = array(), $entityManager)
     {
-        $this->id = $data['id'];
         $this->isReviewed = ($data['is_reviewed'] == null ? 0 : 1);
         $this->reviewType = Replace::replaceNullWithAlt($data['review_type'], 'CFR');
         $this->cfrId = $data['cfr_id'];
         $this->federalRegisterId = $data['federal_register_id'];
         
-        if (!empty($data['state_code_id'])) {
+        if (empty($data['state_code_id'])) {
+            $this->stateCode = null;
+        } else {
             $stateCode= $entityManager->find('Application\Entity\StateCode', $data['state_code_id']);
             if (!is_null($stateCode)) {
                 $this->stateCode = $stateCode;
@@ -428,7 +429,9 @@ class Review
         $this->isEmailAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_email_anonymity_requested']);
         $this->numFteUsEmployees = $data['num_fte_us_employees'];
         
-        if (!empty($data['NAICS_code'])) {
+        if (empty($data['NAICS_code'])) {
+            $this->naics = null;
+        } else {
             $naics = $entityManager->find('Application\Entity\Naics', $data['NAICS_code']);
             if (!is_null($naics)) {
                 $this->naics = $naics;
@@ -440,6 +443,7 @@ class Review
         $this->complaintStatus = Replace::replaceNullWithAlt($data['complaint_status'], 'OPEN');
         $this->origin = Replace::replaceNullWithAlt($data['origin'], 'USER');
         
+        $this->feedbacks->clear();
         if (!empty($data['feedback_key'])) {
             $codes = explode(',', $data['feedback_key']);
             foreach ($codes as $code) {
@@ -452,6 +456,7 @@ class Review
             }
         }
         
+        $this->actions->clear();
         if (!empty($data['action_key'])) {
             $codes = explode(',', $data['action_key']);
             foreach ($codes as $code) {
@@ -511,15 +516,15 @@ class Review
             $this->userType,
             $this->firstName,
             $this->lastName,
-            $this->isUserAnonymityRequested,
+            ($this->isUserAnonymityRequested ? 'Y' : 'N'),
             $this->businessName,
-            $this->isBusinessAnonymityRequested,
+            ($this->isBusinessAnonymityRequested ? 'Y' : 'N'),
             $this->organizationName,
-            $this->isOrganizationAnonymityRequested,
+            ($this->isOrganizationAnonymityRequested ? 'Y' : 'N'),
             $this->zipcode,
-            $this->isZipcodeAnonymityRequested,
+            ($this->isZipcodeAnonymityRequested ? 'Y' : 'N'),
             $this->email,
-            $this->isEmailAnonymityRequested,
+            ($this->isEmailAnonymityRequested ? 'Y' : 'N'),
             $this->numFteUsEmployees,
             (is_null($this->naics) ? '' : $this->naics->getNAICSCode()),
             $this->userComments,

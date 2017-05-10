@@ -13,6 +13,8 @@ class CsvStrategy extends AbstractListenerAggregate
     
     public function __construct(RendererInterface $renderer)
     {
+        date_default_timezone_set('America/Los_Angeles');
+        
         $this->renderer = $renderer;
     }
     
@@ -36,7 +38,6 @@ class CsvStrategy extends AbstractListenerAggregate
         
         $result = $e->getResult();
         
-        date_default_timezone_set('America/Los_Angeles');
         $filename = 'Argive Reviews Export ' . date("Y-m-d");
         
         $response = $e->getResponse();
