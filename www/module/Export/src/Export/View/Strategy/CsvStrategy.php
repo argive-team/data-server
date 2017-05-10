@@ -38,7 +38,7 @@ class CsvStrategy extends AbstractListenerAggregate
         
         $result = $e->getResult();
         
-        $filename = 'Argive Reviews Export ' . date("Y-m-d");
+        $filename = 'Argive Reviews Export ' . date("Y-m-d  G:i:s");
         
         $response = $e->getResponse();
         $response->setContent($result);
