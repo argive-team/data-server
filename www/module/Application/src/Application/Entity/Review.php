@@ -502,7 +502,7 @@ class Review
         return rtrim($result, ',');
     }
     
-    public function getCsvArray()
+    public function getAsCsvArray()
     {
         return array(
             $this->id,
@@ -536,4 +536,3 @@ class Review
         );
     }
 }
-

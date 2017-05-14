@@ -10,7 +10,7 @@
 namespace Export;
 
 use Zend\ModuleManager\Feature\AutoloaderProviderInterface;
-use Zend\Mvc\ModuleRouteListener;
+//use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
 
 class Module implements AutoloaderProviderInterface
@@ -34,7 +34,8 @@ class Module implements AutoloaderProviderInterface
     {
         return include __DIR__ . '/config/module.config.php';
     }
-
+    
+    /*
     public function onBootstrap(MvcEvent $e)
     {
         // You may not need to do this if you're doing it elsewhere in your
@@ -52,12 +53,41 @@ class Module implements AutoloaderProviderInterface
             $strategy->attach($view->getEventManager());
         }, 100);
     }
+    */
+    
+    public function onBootstrap(MvcEvent $e)
+    {
+        $eventManager = $e->getApplication()->getEventManager();
+        $eventManager->attach('render', array($this, 'registerStrategy'), 100);
+    }
+    
+    public function registerStrategy(MvcEvent $e)
+    {
+        $sm = $e->getApplication()->getServiceManager();
+        $view = $sm->get('ViewManager')->getView();
+        
+        $routeMatch = $e->getRouteMatch();
+        if (!empty($routeMatch)) {
+            $routeName = $routeMatch->getMatchedRouteName();
+            switch ($routeName) {
+                case 'export':
+                    $strategy = $sm->get('CsvStrategy');
+                    $view->getEventManager()->attach($strategy, 100);
+                    break;
+                case 'export-default-data':
+                    $strategy = $sm->get('XlsxStrategy');
+                    $view->getEventManager()->attach($strategy, 100);
+                    break;
+            }
+        }
+    }
     
     public function getServiceConfig()
     {
         return array(
             'factories' => array(
                 'CsvStrategy' => 'Export\Factory\View\CsvFactory',
+                'XlsxStrategy' => 'Export\Factory\View\XlsxFactory',
             )
         );
     }

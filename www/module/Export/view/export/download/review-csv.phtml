@@ -7,7 +7,7 @@ if (count($this->results) > 0) {
             $isFirst = false;
             fputcsv($fh, $result->getCsvColumnHeader());
         }
-        fputcsv($fh, $result->getCsvArray());
+        fputcsv($fh, $result->getAsCsvArray());
     }
     fclose($fh);
 }

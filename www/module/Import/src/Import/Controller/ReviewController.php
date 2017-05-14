@@ -13,7 +13,6 @@ use PHPExcel_IOFactory;
 use Zend\Http\Response;
 use Zend\Mvc\Controller\AbstractActionController;
 use Application\Entity\Review;
-use Zend\Filter\File\RenameUpload;
 
 class ReviewController extends AbstractActionController
 {
@@ -193,4 +192,3 @@ class ReviewController extends AbstractActionController
         return array();
     }
 }
-

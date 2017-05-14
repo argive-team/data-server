@@ -1,6 +1,7 @@
 <?php
 namespace Application\Entity;
 
+use PHPExcel_Worksheet;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -24,7 +25,7 @@ class Action
     {
         return $this->actionKey;
     }
-
+    
     public function getTone()
     {
         return $this->tone;
@@ -49,5 +50,18 @@ class Action
     {
         $this->category = $category;
     }
+    
+    public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
+    {
+        $worksheet->setCellValue('A1', 'action_key');
+        $worksheet->setCellValue('B1', 'tone');
+        $worksheet->setCellValue('C1', 'category');
+    }
+    
+    public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
+    {
+        $worksheet->setCellValue('A' . $row, $this->getActionKey());
+        $worksheet->setCellValue('B' . $row, $this->getTone());
+        $worksheet->setCellValue('C' . $row, $this->getCategory());
+    }
 }
-

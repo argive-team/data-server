@@ -42,5 +42,16 @@ class Naics
         $this->NAICSCode= $data['NAICS_code'];
         $this->title= $data['title'];
     }
+    
+    public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
+    {
+        $worksheet->setCellValue('A1', 'NAICS_code');
+        $worksheet->setCellValue('B1', 'title');
+    }
+    
+    public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
+    {
+        $worksheet->setCellValue('A' . $row, $this->getNAICSCode());
+        $worksheet->setCellValue('B' . $row, $this->getTitle());
+    }
 }
-

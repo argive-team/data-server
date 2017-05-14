@@ -139,9 +139,9 @@ class StateCode
         return $this->division;
     }
 
-    public function getAgencyId()
+    public function getAgency()
     {
-        return $this->agencyId;
+        return $this->agency;
     }
 
     public function getShall()
@@ -234,9 +234,9 @@ class StateCode
         $this->division = $division;
     }
 
-    public function setAgencyId($agencyId)
+    public function setAgency($agency)
     {
-        $this->agencyId = $agencyId;
+        $this->agency = $agency;
     }
 
     public function setShall($shall)
@@ -273,5 +273,52 @@ class StateCode
     {
         $this->dateUpdated = $dateUpdated;
     }
+    
+    public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
+    {
+        $worksheet->setCellValue('A1', 'id');
+        $worksheet->setCellValue('B1', 'document_title');
+        $worksheet->setCellValue('C1', 'state');
+        $worksheet->setCellValue('D1', 'year');
+        $worksheet->setCellValue('E1', 'title');
+        $worksheet->setCellValue('F1', 'part');
+        $worksheet->setCellValue('G1', 'chapter');
+        $worksheet->setCellValue('H1', 'file_name');
+        $worksheet->setCellValue('I1', 'wordcount');
+        $worksheet->setCellValue('J1', 'section');
+        $worksheet->setCellValue('K1', 'reg_number');
+        $worksheet->setCellValue('L1', 'division');
+        $worksheet->setCellValue('M1', 'agency_id');
+        $worksheet->setCellValue('N1', 'shall');
+        $worksheet->setCellValue('O1', 'must');
+        $worksheet->setCellValue('P1', 'may_not');
+        $worksheet->setCellValue('Q1', 'required');
+        $worksheet->setCellValue('R1', 'prohibited');
+        $worksheet->setCellValue('S1', 'restrictions_total');
+        $worksheet->setCellValue('T1', 'date_updated');
+    }
+    
+    public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
+    {
+        $worksheet->setCellValue('A' . $row, $this->getId());
+        $worksheet->setCellValue('B' . $row, $this->getDocumentTitle());
+        $worksheet->setCellValue('C' . $row, $this->getState());
+        $worksheet->setCellValue('D' . $row, $this->getYear());
+        $worksheet->setCellValue('E' . $row, $this->getTitle());
+        $worksheet->setCellValue('F' . $row, $this->getPart());
+        $worksheet->setCellValue('G' . $row, $this->getChapter());
+        $worksheet->setCellValue('H' . $row, $this->getFileName());
+        $worksheet->setCellValue('I' . $row, $this->getWordcount());
+        $worksheet->setCellValue('J' . $row, $this->getSection());
+        $worksheet->setCellValue('K' . $row, $this->getRegNumber());
+        $worksheet->setCellValue('L' . $row, $this->getDivision());
+        $worksheet->setCellValue('M' . $row, (is_null($this->getAgency()) ? '' : $this->getAgency()->getId()));
+        $worksheet->setCellValue('N' . $row, $this->getShall());
+        $worksheet->setCellValue('O' . $row, $this->getMust());
+        $worksheet->setCellValue('P' . $row, $this->getMayNot());
+        $worksheet->setCellValue('Q' . $row, $this->getRequired());
+        $worksheet->setCellValue('R' . $row, $this->getProhibited());
+        $worksheet->setCellValue('S' . $row, $this->getRestrictionsTotal());
+        $worksheet->setCellValue('T' . $row, $this->getDateUpdated()->format('Y-m-d H:i:s'));
+    }
 }
-

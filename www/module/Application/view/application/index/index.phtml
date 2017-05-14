@@ -22,4 +22,16 @@
             </div>
         </div>
     </div>
+    
+    <div class="col-md-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><?php echo $this->translate('Export Default Data') ?></h3>
+            </div>
+            <div class="panel-body">
+                <p><?php echo sprintf($this->translate('Download all default data, i.e. action keys, federal agencies, etc. as .xlsx file.'), '</a>') ?></p>
+                <p><a class="btn btn-success pull-right" href="<?php echo $this->url('export-default-data', array()); ?>"><?php echo $this->translate('Download') ?> &raquo;</a></p>
+            </div>
+        </div>
+    </div>
 </div>

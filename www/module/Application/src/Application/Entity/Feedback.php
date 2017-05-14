@@ -1,6 +1,7 @@
 <?php
 namespace Application\Entity;
 
+use PHPExcel_Worksheet;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -62,5 +63,20 @@ class Feedback
     {
         $this->specifics = $specifics;
     }
+    
+    public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
+    {
+        $worksheet->setCellValue('A1', 'feedback_key');
+        $worksheet->setCellValue('B1', 'tone');
+        $worksheet->setCellValue('C1', 'category');
+        $worksheet->setCellValue('D1', 'specifics');
+    }
+    
+    public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
+    {
+        $worksheet->setCellValue('A' . $row, $this->getFeedbackKey());
+        $worksheet->setCellValue('B' . $row, $this->getTone());
+        $worksheet->setCellValue('C' . $row, $this->getCategory());
+        $worksheet->setCellValue('D' . $row, $this->getSpecifics());
+    }
 }
-

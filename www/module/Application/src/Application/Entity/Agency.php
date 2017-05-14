@@ -21,7 +21,7 @@ class Agency
      * @ORM\ManyToOne(targetEntity="Agency", fetch="EAGER")
      * @ORM\JoinColumn(name="parent_agency_id", referencedColumnName="id")
      */
-    protected $parentAgencyId;
+    protected $parentAgency;
     
     /** @ORM\Column(name="is_main_agency", type="boolean") */
     protected $isMainAgency;
@@ -41,9 +41,9 @@ class Agency
         return $this->name;
     }
 
-    public function getParentAgencyId()
+    public function getParentAgency()
     {
-        return $this->parentAgencyId;
+        return $this->parentAgency;
     }
 
     public function getIsMainAgency()
@@ -56,17 +56,29 @@ class Agency
         $this->name = $name;
     }
 
-    public function setParentAgencyId($parentAgencyId)
+    public function setParentAgency($parentAgency)
     {
-        $this->parentAgencyId = $parentAgencyId;
+        $this->parentAgency = $parentAgency;
     }
 
     public function setIsMainAgency($isMainAgency)
     {
         $this->isMainAgency = $isMainAgency;
     }
-
     
+    public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
+    {
+        $worksheet->setCellValue('A1', 'id');
+        $worksheet->setCellValue('B1', 'name');
+        $worksheet->setCellValue('C1', 'parent_agency_id');
+        $worksheet->setCellValue('D1', 'is_main_agency');
+    }
     
+    public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
+    {
+        $worksheet->setCellValue('A' . $row, $this->getId());
+        $worksheet->setCellValue('B' . $row, $this->getName());
+        $worksheet->setCellValue('C' . $row, (is_null($this->getParentAgency()) ? '' : $this->getParentAgency()->getId()));
+        $worksheet->setCellValue('D' . $row, ($this->getIsMainAgency() ? 1 : 0));
+    }
 }
-
