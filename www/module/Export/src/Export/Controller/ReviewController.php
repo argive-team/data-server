@@ -27,9 +27,12 @@ class ReviewController extends AbstractActionController
     
     public function indexAction()
     {
-        $results = $this->em->getRepository('Application\Entity\Review')->findAll();
+        $reviews = $this->em->getRepository('Application\Entity\Review')->findAll();
         
-        $model = new ViewModel(array('results' => $results));
+        $model = new ViewModel(array(
+            'reviews' => $reviews, 
+            'filename' => 'Argive Reviews Export ' . date("Y-m-d G:i:s")
+        ));
         $model->setTemplate('export/download/review-csv.phtml')
             ->setTerminal(true);
         

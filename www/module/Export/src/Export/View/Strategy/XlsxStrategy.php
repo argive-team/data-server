@@ -38,7 +38,7 @@ class XlsxStrategy extends AbstractListenerAggregate
         
         $result = $e->getResult();
         
-        $filename = 'Argive Default Data Export ' . date("Y-m-d G:i:s");
+        $filename = $e->getModel()->filename;
         
         $response = $e->getResponse();
         $response->setContent($result);

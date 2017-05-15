@@ -15,6 +15,7 @@ use PHPExcel_Worksheet;
 use Zend\Http\Headers;
 use Zend\Http\Response;
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
 
 class DefaultDataController extends AbstractActionController
 {
@@ -36,34 +37,34 @@ class DefaultDataController extends AbstractActionController
         $worksheetIndex = 0;
         
         // Action keys
-        $results = $this->em->getRepository('Application\Entity\Action')->findAll();
+        $actions = $this->em->getRepository('Application\Entity\Action')->findAll();
         $worksheet = $objPHPExcel->getSheet($worksheetIndex);
         $worksheet->setTitle('Action Keys');
-        $this->writeToWorksheet($worksheet, $results);
+        $this->writeToWorksheet($worksheet, $actions);
         
         // Agencies
-        $results = $this->em->getRepository('Application\Entity\Agency')->findAll();
+        $agencies = $this->em->getRepository('Application\Entity\Agency')->findAll();
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Agencies');
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
-        $this->writeToWorksheet($worksheet, $results);
+        $this->writeToWorksheet($worksheet, $agencies);
         
         // Feedback keys
-        $results = $this->em->getRepository('Application\Entity\Feedback')->findAll();
+        $feedbacks = $this->em->getRepository('Application\Entity\Feedback')->findAll();
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Feedback Keys');
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
-        $this->writeToWorksheet($worksheet, $results);
+        $this->writeToWorksheet($worksheet, $feedbacks);
         
         // NAICS
-        $results = $this->em->getRepository('Application\Entity\Naics')->findAll();
+        $naics = $this->em->getRepository('Application\Entity\Naics')->findAll();
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'NAICS');
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
-        $this->writeToWorksheet($worksheet, $results);
+        $this->writeToWorksheet($worksheet, $naics);
         
         // State codes
-        $results = $this->em->getRepository('Application\Entity\StateCode')->findAll();
+        $stateCodes = $this->em->getRepository('Application\Entity\StateCode')->findAll();
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'State Codes');
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
-        $this->writeToWorksheet($worksheet, $results);
+        $this->writeToWorksheet($worksheet, $stateCodes);
         
         // Output writer
         $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
