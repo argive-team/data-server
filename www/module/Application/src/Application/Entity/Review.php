@@ -528,13 +528,129 @@ class Review
         }
     }
     
+    public function getCsvColumnPlainHeader()
+    {
+        return array(
+            'Argive Reviewed and Approved?',
+            'Review Comment ID',
+            'User Type',
+            'CFR Id',
+            'Federal Register ID',
+            'State Code ID',
+            'Statute ID',
+            'Municipal Code ID',
+            'First Name',
+            'Last Name',
+            'Anonymity Name Value',
+            'Name anonymity requested?',
+            'Business Name',
+            'Company name anonymity requested?',
+            'Organization Name',
+            'Organization Name Anonymity',
+            'Zip Code',
+            'Hide zip code?',
+            'Email',
+            'Email Anonymity',
+            '# of FTE US Employees',
+            'Complaint Status',
+            'Rule Status',
+            'Timestamp (when was comment entered?)',
+            'NAICS_max',
+            'Feedback Tags',
+            'Submittor Comments (Free Text)',
+            'Suggested Action (Free text)',
+            'Action Tags',
+            'Origin',
+            'Impact Timing',
+            'Impact Tags',
+            'Argive Comments',
+            'Agency Response (free text)',
+            'Statute ID',
+            'Jurisdiction',
+            'State (if applicable)',
+            'Associated Statute',
+            'Associated Statute: Description',
+            'CFR Id',
+            'Type: Discretionary',
+            'Title (CFR)',
+            'Part (CFR)',
+            'Code Link Federal register notices are ideal',
+            'Regulatory Code Description',
+            'Subpart (CFR)',
+            'State Code ID',
+            'State (if applicable)',
+            'State: Title',
+            'State: Division',
+            'State: Chapter',
+            'State: Part',
+            'State: Article',
+            'State: Section',
+            'Municipal Code Id',
+            'Municipal Code',
+            'Municipal State',
+            'Municipality'
+        );
+    }
+    
     public function getCsvColumnHeader()
     {
         return array(
-            'id', 'is_reviewed', 'review_type', 'cfr_id', 'federal_register_id', 'state_code_id', 'statute_id', 'comment_at', 'user_type', 'first_name', 'last_name',
-            'is_user_anonymity_requested', 'business_name', 'is_business_anonymity_requested', 'organization_name', 'is_organization_anonymity_requested',
-            'zipcode', 'is_zipcode_anonymity_requested', 'email', 'is_email_anonymity_requested', 'num_fte_us_employees', 'NAICS_code', 'user_comments',
-            'suggested_action', 'complaint_status', 'origin', 'feedback_key', 'action_key'
+            'T_REVIEW.is_reviewed',
+            'T_REVIEW.id',
+            'T_REVIEW.user_type',
+            'T_REVIEW.cfr_id',
+            'T_REVIEW.federal_register_id',
+            'T_REVIEW.state_code_id',
+            'T_REVIEW.statute_id',
+            'T_REVIEW.municipal_code_id',
+            'T_REVIEW.first_name',
+            'T_REVIEW.last_name',
+            'T_REVIEW.is_user_anonymity_requested',
+            'T_REVIEW.business_name',
+            'T_REVIEW.is_business_anonymity_requested',
+            'T_REVIEW.organization_name',
+            'T_REVIEW.is_organization_anonymity_requested',
+            'T_REVIEW.zipcode',
+            'T_REVIEW.is_zipcode_anonymity_requested',
+            'T_REVIEW.email',
+            'T_REVIEW.is_email_anonymity_requested',
+            'T_REVIEW.num_fte_us_employees',
+            'T_REVIEW.complaint_status',
+            'T_REVIEW.comment_at',
+            'T_REVIEW.NAICS_code',
+            'T_REVIEW.feedback_key',
+            'T_REVIEW.user_comments',
+            'T_REVIEW.suggested_action',
+            'T_REVIEW.action_key',
+            'T_REVIEW.origin',
+            'T_REVIEW.impact_timing_key',
+            'T_REVIEW.impact_key',
+            'T_REVIEW_COMMENT.user_name=argive',
+            'T_REVIEW_COMMENT.user_name=agency_response',
+            'T_STATUTE.id',
+            'T_STATUTE.statute_jurisdiction',
+            'T_STATUTE.state',
+            'T_STATUTE.statute',
+            'T_STATUTE.statute_description',
+            'T_CFR.id',
+            'T_CFR.discretionary_type',
+            'T_CFR.cfr_title',
+            'T_CFR.cfr_part',
+            'T_CFR.code_link',
+            'T_CFR.regulatory_code_description',
+            'T_CFR.subpart',
+            'T_STATE_CODE.id',
+            'T_STATE_CODE.state',
+            'T_STATE_CODE.title',
+            'T_STATE_CODE.division',
+            'T_STATE_CODE.chapter',
+            'T_STATE_CODE.part',
+            'T_STATE_CODE.article',
+            'T_STATE_CODE.section',
+            'T_MUNICIPAL_CODE.id',
+            'T_MUNICIPAL_CODE.title',
+            'T_MUNICIPAL_CODE.state',
+            'T_MUNICIPAL_CODE.municipality'
         );
     }
     
@@ -560,17 +676,28 @@ class Review
         return rtrim($result, ',');
     }
     
+    private function getImpactTagsAsDelimitedStr()
+    {
+        $result = '';
+        
+        foreach ($this->impactTags as $tag) {
+            $result .= $tag->getImpactKey() . ',';
+        }
+        
+        return rtrim($result, ',');
+    }
+    
     public function getAsCsvArray()
     {
         return array(
-            $this->id,
             $this->isReviewed,
+            $this->id,
+            $this->userType,
             (is_null($this->cfr) ?  '' : $this->cfr->getId()),
             $this->federalRegisterId,
             (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
             (is_null($this->statute) ?  '' : $this->statute->getId()),
-            $this->commentAt->format('Y-m-d H:i:s'),
-            $this->userType,
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getId()),
             $this->firstName,
             $this->lastName,
             ($this->isUserAnonymityRequested ? 'Y' : 'N'),
@@ -583,13 +710,42 @@ class Review
             $this->email,
             ($this->isEmailAnonymityRequested ? 'Y' : 'N'),
             $this->numFteUsEmployees,
+            $this->complaintStatus,
+            $this->commentAt->format('Y-m-d H:i:s'),
             (is_null($this->naics) ? '' : $this->naics->getNAICSCode()),
+            (count($this->feedbacks) == 0 ? '' : $this->getFeedbacksAsDelimitedStr()),
             $this->userComments,
             $this->suggestedAction,
-            $this->complaintStatus,
-            $this->origin,
-            (count($this->feedbacks) == 0 ? '' : $this->getFeedbacksAsDelimitedStr()),
             (count($this->actions) == 0 ? '' : $this->getActionsAsDelimitedStr()),
+            $this->origin,
+            (is_null($this->impactTiming) ?  '' : $this->impactTiming->getImpactTimingKey()),
+            (count($this->impactTags) == 0 ? '' : $this->getImpactTagsAsDelimitedStr()),
+            'T_REVIEW_COMMENT.user_name=argive',
+            'T_REVIEW_COMMENT.user_name=agency_response',
+            (is_null($this->statute) ?  '' : $this->statute->getId()),
+            (is_null($this->statute) ?  '' : $this->statute->getStatuteJurisdiction()),
+            (is_null($this->statute) ?  '' : $this->statute->getState()),
+            (is_null($this->statute) ?  '' : $this->statute->getStatute()),
+            (is_null($this->statute) ?  '' : $this->statute->getStatuteDescription()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getId()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getDiscretionaryType()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getCfrTitle()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getCfrPart()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getCodeLink()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getRegulatoryCodeDescription()),
+            (is_null($this->cfr) ?  '' : $this->cfr->getSubpart()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getState()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getTitle()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getDivision()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getChapter()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getPart()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getArticle()),
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getSection()),
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getId()),
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getTitle()),
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getState()),
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getMunicipality())
         );
     }
 }

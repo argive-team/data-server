@@ -60,7 +60,7 @@ class ImpactTag
     
     public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
     {
-        $worksheet->setCellValue('A' . $row, $this->getFeedbackKey());
+        $worksheet->setCellValue('A' . $row, $this->getImpactKey());
         $worksheet->setCellValue('B' . $row, $this->getTone());
         $worksheet->setCellValue('C' . $row, $this->getSpecifics());
     }

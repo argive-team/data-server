@@ -5,6 +5,7 @@ if (count($this->reviews) > 0) {
     foreach ($this->reviews as $review) {
         if ($isFirst) {
             $isFirst = false;
+            fputcsv($fh, $review->getCsvColumnPlainHeader());
             fputcsv($fh, $review->getCsvColumnHeader());
         }
         fputcsv($fh, $review->getAsCsvArray());

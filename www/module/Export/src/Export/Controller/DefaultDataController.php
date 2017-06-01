@@ -54,6 +54,24 @@ class DefaultDataController extends AbstractActionController
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
         $this->writeToWorksheet($worksheet, $feedbacks);
         
+        // Impact Tags
+        $impactTags = $this->em->getRepository('Application\Entity\ImpactTag')->findAll();
+        $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Impact Tags');
+        $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
+        $this->writeToWorksheet($worksheet, $impactTags);
+        
+        // Impact Timing
+        $impactTiming = $this->em->getRepository('Application\Entity\ImpactTiming')->findAll();
+        $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Impact Timing');
+        $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
+        $this->writeToWorksheet($worksheet, $impactTiming);
+        
+        // Municipal codes
+        $municipalCodes = $this->em->getRepository('Application\Entity\MunicipalCode')->findAll();
+        $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Municipal Codes');
+        $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
+        $this->writeToWorksheet($worksheet, $municipalCodes);
+        
         // NAICS
         $naics = $this->em->getRepository('Application\Entity\Naics')->findAll();
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'NAICS');
@@ -65,6 +83,12 @@ class DefaultDataController extends AbstractActionController
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'State Codes');
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
         $this->writeToWorksheet($worksheet, $stateCodes);
+        
+        // Statute
+        $statute = $this->em->getRepository('Application\Entity\Statute')->findAll();
+        $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Statute');
+        $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
+        $this->writeToWorksheet($worksheet, $statute);
         
         // Output writer
         $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
