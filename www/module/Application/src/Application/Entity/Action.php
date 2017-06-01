@@ -15,53 +15,38 @@ class Action
     /** @ORM\Id @ORM\Column(name="action_key", type="integer") */
     protected $actionKey;
     
-    /** @ORM\Column(length=8) */
-    protected $tone;
-    
     /** @ORM\Column(length=256) */
-    protected $category;
+    protected $description;
     
     public function getActionKey()
     {
         return $this->actionKey;
     }
     
-    public function getTone()
+    public function getDecription()
     {
-        return $this->tone;
-    }
-
-    public function getCategory()
-    {
-        return $this->category;
+        return $this->description;
     }
     
     public function setActionKey($actionKey)
     {
         $this->actionKey = $actionKey;
     }
-
-    public function setTone($tone)
+    
+    public function setDescription($description)
     {
-        $this->tone = $tone;
-    }
-
-    public function setCategory($category)
-    {
-        $this->category = $category;
+        $this->description= $description;
     }
     
     public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
     {
         $worksheet->setCellValue('A1', 'action_key');
-        $worksheet->setCellValue('B1', 'tone');
-        $worksheet->setCellValue('C1', 'category');
+        $worksheet->setCellValue('B1', 'description');
     }
     
     public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
     {
         $worksheet->setCellValue('A' . $row, $this->getActionKey());
-        $worksheet->setCellValue('B' . $row, $this->getTone());
-        $worksheet->setCellValue('C' . $row, $this->getCategory());
+        $worksheet->setCellValue('B' . $row, $this->getDecription());
     }
 }

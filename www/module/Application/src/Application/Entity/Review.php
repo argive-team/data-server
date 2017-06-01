@@ -18,11 +18,11 @@ class Review
     /** @ORM\Column(name="is_reviewed", type="boolean", options={"default":0}) */
     protected $isReviewed;
     
-    /** @ORM\Column(name="review_type", length=16) */
-    protected $reviewType;
-    
-    /** @ORM\Column(name="cfr_id", type="integer", nullable=true) */
-    protected $cfrId;
+    /**
+     * @ORM\ManyToOne(targetEntity="Cfr", fetch="EAGER")
+     * @ORM\JoinColumn(name="cfr_id", referencedColumnName="id")
+     */
+    protected $cfr;
     
     /** @ORM\Column(name="federal_register_id", type="integer", nullable=true) */
     protected $federalRegisterId;
@@ -33,8 +33,17 @@ class Review
      */
     protected $stateCode;
     
-    /** @ORM\Column(name="statute_id", type="integer", nullable=true) */
-    protected $statuteId;
+    /**
+     * @ORM\ManyToOne(targetEntity="MunicipalCode", fetch="EAGER")
+     * @ORM\JoinColumn(name="municipal_code_id", referencedColumnName="id")
+     */
+    protected $municipalCode;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="Statute", fetch="EAGER")
+     * @ORM\JoinColumn(name="statute_id", referencedColumnName="id")
+     */
+    protected $statute;
     
     /** @ORM\Column(name="comment_at", type="datetime") */
     protected $commentAt;
@@ -114,32 +123,43 @@ class Review
      */
     protected $actions;
     
+    /**
+     * @ORM\ManyToMany(targetEntity="ImpactTag", fetch="EAGER")
+     * @ORM\JoinTable(name="T_REVIEW_has_T_IMPACT_TAG",
+     *      joinColumns={@ORM\JoinColumn(name="review_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="impact_key", referencedColumnName="impact_key")}
+     *      )
+     */
+    protected $impactTags;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="ImpactTiming")
+     * @ORM\JoinColumn(name="impact_timing_key", referencedColumnName="impact_timing_key")
+     */
+    protected $impactTiming;
+    
     public function __construct()
     {
         date_default_timezone_set('UTC');
         
         $this->feedbacks = new \Doctrine\Common\Collections\ArrayCollection();
         $this->actions = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->impactTags = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
     public function getId()
     {
         return $this->id;
     }
-    
+
     public function getIsReviewed()
     {
         return $this->isReviewed;
     }
 
-    public function getReviewType()
+    public function getCfr()
     {
-        return $this->reviewType;
-    }
-
-    public function getCfrId()
-    {
-        return $this->cfrId;
+        return $this->cfr;
     }
 
     public function getFederalRegisterId()
@@ -152,9 +172,14 @@ class Review
         return $this->stateCode;
     }
 
-    public function getStatuteId()
+    public function getMunicipalCode()
     {
-        return $this->statuteId;
+        return $this->municipalCode;
+    }
+
+    public function getStatute()
+    {
+        return $this->statute;
     }
 
     public function getCommentAt()
@@ -251,15 +276,25 @@ class Review
     {
         return $this->origin;
     }
-    
+
     public function getFeedbacks()
     {
         return $this->feedbacks;
     }
-    
+
     public function getActions()
     {
         return $this->actions;
+    }
+
+    public function getImpactTags()
+    {
+        return $this->impactTags;
+    }
+
+    public function getImpactTiming()
+    {
+        return $this->impactTiming;
     }
     
     public function setIsReviewed($isReviewed)
@@ -267,14 +302,9 @@ class Review
         $this->isReviewed = $isReviewed;
     }
 
-    public function setReviewType($reviewType)
+    public function setCfr($cfr)
     {
-        $this->reviewType = $reviewType;
-    }
-
-    public function setCfrId($cfrId)
-    {
-        $this->cfrId = $cfrId;
+        $this->cfr = $cfr;
     }
 
     public function setFederalRegisterId($federalRegisterId)
@@ -287,9 +317,14 @@ class Review
         $this->stateCode = $stateCode;
     }
 
-    public function setStatuteId($statuteId)
+    public function setMunicipalCode($municipalCode)
     {
-        $this->statuteId = $statuteId;
+        $this->municipalCode = $municipalCode;
+    }
+
+    public function setStatute($statute)
+    {
+        $this->statute = $statute;
     }
 
     public function setCommentAt($commentAt)
@@ -386,34 +421,35 @@ class Review
     {
         $this->origin = $origin;
     }
-    
+
     public function setFeedbacks($feedbacks)
     {
         $this->feedbacks = $feedbacks;
     }
-    
+
     public function setActions($actions)
     {
         $this->actions = $actions;
+    }
+
+    public function setImpactTags($impactTags)
+    {
+        $this->impactTags = $impactTags;
+    }
+
+    public function setImpactTiming($impactTiming)
+    {
+        $this->impactTiming = $impactTiming;
     }
     
     public function exchangeData($data = array(), $entityManager)
     {
         $this->isReviewed = ($data['is_reviewed'] == null ? 0 : 1);
-        $this->reviewType = Replace::replaceNullWithAlt($data['review_type'], 'CFR');
-        $this->cfrId = $data['cfr_id'];
+        $this->cfr = $data['cfr'];
         $this->federalRegisterId = $data['federal_register_id'];
-        
-        if (empty($data['state_code_id'])) {
-            $this->stateCode = null;
-        } else {
-            $stateCode= $entityManager->find('Application\Entity\StateCode', $data['state_code_id']);
-            if (!is_null($stateCode)) {
-                $this->stateCode = $stateCode;
-            }
-        }
-        
-        $this->statuteId = $data['statute_id'];
+        $this->stateCode = $data['stateCode'];
+        $this->municipalCode = $data['municipalCode'];
+        $this->statute = $data['statute'];
         $this->commentAt = Replace::replaceNullWithAlt(\DateTime::createFromFormat('Y-m-d H:i:s', $data['comment_at']), new \DateTime());
         $this->userType = Replace::replaceNullWithAlt($data['user_type'], 'BUSINESS_OWNER');
         $this->firstName = Replace::replaceNullWithAlt($data['first_name'], '');
@@ -468,6 +504,28 @@ class Review
                 }
             }
         }
+        
+        $this->impactTags->clear();
+        if (!empty($data['impact_key'])) {
+            $tags = explode(',', $data['impact_key']);
+            foreach ($tags as $tag) {
+                // [TODO: Is there exception to catch if fail?]
+                $impact = $entityManager->find('Application\Entity\ImpactTag', $tag);
+                // [TODO: Log invalid impact key]
+                if (!is_null($impact)) {
+                    $this->impactTags->add($impact);
+                }
+            }
+        }
+        
+        if (empty($data['impact_timing_key'])) {
+            $this->impactTiming = null;
+        } else {
+            $impactTiming = $entityManager->find('Application\Entity\ImpactTiming', $data['impact_timing_key']);
+            if (!is_null($impactTiming)) {
+                $this->impactTiming = $impactTiming;
+            }
+        }
     }
     
     public function getCsvColumnHeader()
@@ -507,11 +565,10 @@ class Review
         return array(
             $this->id,
             $this->isReviewed,
-            $this->reviewType,
-            $this->cfrId,
+            (is_null($this->cfr) ?  '' : $this->cfr->getId()),
             $this->federalRegisterId,
             (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
-            $this->statuteId,
+            (is_null($this->statute) ?  '' : $this->statute->getId()),
             $this->commentAt->format('Y-m-d H:i:s'),
             $this->userType,
             $this->firstName,

@@ -12,7 +12,14 @@ namespace Import\Controller;
 use PHPExcel_IOFactory;
 use Zend\Http\Response;
 use Zend\Mvc\Controller\AbstractActionController;
+
+use Application\Entity\Cfr;
+use Application\Entity\MunicipalCode;
 use Application\Entity\Review;
+use Application\Entity\StateCode;
+use Application\Entity\Statute;
+use Application\Utilility\Replace;
+use Application\Entity\ReviewComment;
 
 class ReviewController extends AbstractActionController
 {
@@ -166,29 +173,290 @@ class ReviewController extends AbstractActionController
             $sheet = $objPHPExcel->getSheet($sheetIndex);
             $highestRow = $sheet->getHighestRow();
             $highestColumn = $sheet->getHighestColumn();
-            $rowHeader = $sheet->rangeToArray('A1:' . $highestColumn . 1);
+            $rowHeader = $sheet->rangeToArray('A2:' . $highestColumn . 2);
             
-            for ($row = 2; $row <= $highestRow; $row++) {
+            for ($row = 3; $row <= $highestRow; $row++) {
                 $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
                 $data = array_combine($rowHeader[0], $rowData[0]);
                 
-                $review = null;
-                if ($data['id'] != null) {
-                    $review = $this->em->find('Application\Entity\Review', $data['id']);
-                } else {
-                    // [TODO: Log error.  Invalid id.]
-                }
-                if (is_null($review)) {
-                    $review = new Review();
-                }
-                $review->exchangeData($data, $this->em);
-                $this->em->persist($review);
-                $this->em->flush();
+                $cfr = $this->importCfr($data, $this->em);
+                $statute = $this->importStatute($data, $this->em);
+                $stateCode = $this->importStateCode($data, $this->em);
+                $municipalCode = $this->importMunicipalCode($data, $this->em);
+                $review = $this->importReview($data, $cfr, $statute, $stateCode, $municipalCode, $this->em);
+                $this->importReviewComments($review, $data, $this->em);
             }
             
             rename($inputFileName, $completedDir . '/' . basename($inputFileName));
         }
         
         return array();
+    }
+    
+    private function getColumnsByTableName($tableName, $indata)
+    {
+        $data = array();
+        
+        foreach (array_keys($indata) as $key) {
+            $arr = explode('.', $key);
+            if (sizeof($arr) == 2 && $arr[0] == $tableName) {
+                $data[$arr[1]] = $indata[$key];
+            }
+        }
+        
+        return $data;
+    }
+    
+    private function importCfr($indata, $entityManager)
+    {
+        $data = $this->getColumnsByTableName('T_CFR', $indata);
+        
+        $cfr = null;
+        
+        if ($data['id'] != null) {
+            $cfr= $entityManager->find('Application\Entity\Cfr', $data['id']);
+            
+            if (is_null($cfr)) {
+                // [TODO: Log error.  Invalid T_CFR.id.]
+            }
+            
+            $cfr->exchangeData($data, $entityManager);
+            $entityManager->persist($cfr);
+            $entityManager->flush();
+        } else if ($data['cfr_title'] != null || $data['cfr_part'] != null || $data['subpart'] != null) {
+            $query = $entityManager->createQuery('SELECT c FROM Application\Entity\Cfr c WHERE c.cfrTitle = :title AND c.cfrPart = :part AND c.subpart = :subpart');
+            $query->setParameters(array(
+                'title'   => Replace::replaceNullWithAlt($data['cfr_title'], ''),
+                'part'    => Replace::replaceNullWithAlt($data['cfr_part'], ''),
+                'subpart' => Replace::replaceNullWithAlt($data['subpart'], '')
+            ));
+            $cfrs = $query->getResult();
+            
+            // Take first CFR
+            if (sizeof($cfrs) > 0) {
+                $cfr = $cfrs[0];
+            } else {
+                $cfr = new Cfr();
+            }
+            
+            $cfr->exchangeData($data, $entityManager);
+            $entityManager->persist($cfr);
+            $entityManager->flush();
+        }
+        
+        return $cfr;
+    }
+    
+    private function importStatute($indata, $entityManager)
+    {
+        $data = $this->getColumnsByTableName('T_STATUTE', $indata);
+        
+        $statute = null;
+        
+        if ($data['id'] != null) {
+            $statute= $entityManager->find('Application\Entity\Statute', $data['id']);
+            
+            if (is_null($statute)) {
+                // [TODO: Log error.  Invalid T_STATUTE.id.]
+            }
+            
+            $statute->exchangeData($data, $entityManager);
+            $entityManager->persist($statute);
+            $entityManager->flush();
+        } else if ($data['statute'] != null || $data['statute_description'] != null || $data['statute_jurisdiction'] != null || $data['state'] != null) {
+            $query = $entityManager->createQuery('SELECT s FROM Application\Entity\Statute s WHERE s.statute = :statute AND s.statuteDescription = :description AND s.statuteJurisdiction = :jurisdiction AND s.state = :state');
+            $query->setParameters(array(
+                'statute'      => Replace::replaceNullWithAlt($data['statute'], ''),
+                'description'  => Replace::replaceNullWithAlt($data['statute_description'], ''),
+                'jurisdiction' => Replace::replaceNullWithAlt($data['statute_jurisdiction'], ''),
+                'state'        => Replace::replaceNullWithAlt($data['state'], '')
+            ));
+            $statutes= $query->getResult();
+            
+            // Take first statute
+            if (sizeof($statutes) > 0) {
+                $statute = $statutes[0];
+            } else {
+                $statute = new Statute();
+            }
+            
+            $statute->exchangeData($data, $entityManager);
+            $entityManager->persist($statute);
+            $entityManager->flush();
+        }
+        
+        return $statute;
+    }
+    
+    private function importStateCode($indata, $entityManager)
+    {
+        $data = $this->getColumnsByTableName('T_STATE_CODE', $indata);
+        
+        $stateCode = null;
+        
+        if ($data['id'] != null) {
+            $stateCode= $entityManager->find('Application\Entity\StateCode', $data['id']);
+            
+            if (is_null($stateCode)) {
+                // [TODO: Log error.  Invalid T_STATE_CODE.id.]
+            }
+            
+            $stateCode->exchangeData($data, $entityManager);
+            $entityManager->persist($stateCode);
+            $entityManager->flush();
+        } else if ($data['state'] != null || $data['title'] != null || $data['division'] != null || $data['chapter'] != null || $data['part'] != null || $data['article'] != null || $data['section'] != null) {
+            $query = $entityManager->createQuery('SELECT s FROM Application\Entity\StateCode s WHERE s.state = :state AND s.title = :title AND s.division = :division AND s.chapter = :chapter AND s.part = :part AND s.article = :article AND s.section = :section');
+            $query->setParameters(array(
+                'state'    => Replace::replaceNullWithAlt($data['state'], ''),
+                'title'    => Replace::replaceNullWithAlt($data['title'], ''),
+                'division' => Replace::replaceNullWithAlt($data['division'], ''),
+                'chapter'  => Replace::replaceNullWithAlt($data['chapter'], ''),
+                'part'     => Replace::replaceNullWithAlt($data['part'], ''),
+                'article'  => Replace::replaceNullWithAlt($data['article'], ''),
+                'section'  => Replace::replaceNullWithAlt($data['section'], '')
+            ));
+            $stateCodes = $query->getResult();
+            
+            // Take first state code
+            if (sizeof($stateCodes) > 0) {
+                $stateCode = $stateCodes[0];
+            } else {
+                $stateCode = new StateCode();
+            }
+            
+            $stateCode->exchangeData($data, $entityManager);
+            $entityManager->persist($stateCode);
+            $entityManager->flush();
+        }
+        
+        return $stateCode;
+    }
+    
+    private function importMunicipalCode($indata, $entityManager)
+    {
+        $data = $this->getColumnsByTableName('T_MUNICIPAL_CODE', $indata);
+        
+        $municipalCode = null;
+        
+        if ($data['id'] != null) {
+            $municipalCode = $entityManager->find('Application\Entity\MunicipalCode', $data['id']);
+            
+            if (is_null($municipalCode)) {
+                // [TODO: Log error.  Invalid T_MUNICIPAL_CODE.id.]
+            }
+            
+            $municipalCode->exchangeData($data, $entityManager);
+            $entityManager->persist($municipalCode);
+            $entityManager->flush();
+        } else if ($data['state'] != null || $data['municipality'] != null || $data['title'] != null) {
+            $query = $entityManager->createQuery('SELECT m FROM Application\Entity\MunicipalCode m WHERE m.state = :state AND m.municipality = :municipality AND m.title = :title');
+            $query->setParameters(array(
+                'state'        => Replace::replaceNullWithAlt($data['state'], ''),
+                'municipality' => Replace::replaceNullWithAlt($data['municipality'], ''),
+                'title'        => Replace::replaceNullWithAlt($data['title'], '')
+            ));
+            $municipalCodes = $query->getResult();
+            
+            // Take first state code
+            if (sizeof($municipalCodes) > 0) {
+                $municipalCode = $municipalCodes[0];
+            } else {
+                $municipalCode = new MunicipalCode();
+            }
+            
+            $municipalCode->exchangeData($data, $entityManager);
+            $entityManager->persist($municipalCode);
+            $entityManager->flush();
+        }
+        
+        return $municipalCode;
+    }
+    
+    private function importReview($indata, $cfr, $statute, $stateCode, $municipalCode, $entityManager)
+    {
+        $data = $this->getColumnsByTableName('T_REVIEW', $indata);
+        $data['cfr'] = $cfr;
+        $data['statute'] = $statute;
+        $data['stateCode'] = $stateCode;
+        $data['municipalCode'] = $municipalCode;
+        
+        $review = null;
+        
+        if ($data['id'] != null) {
+            $review = $entityManager->find('Application\Entity\Review', $data['id']);
+            
+            if (is_null($review)) {
+                // [TODO: Log error.  Invalid T_REVIEW.id.]
+            }
+        }
+        
+        if (is_null($review)) {
+            $review = new Review();
+        }
+        $review->exchangeData($data, $entityManager);
+        $entityManager->persist($review);
+        $entityManager->flush();
+        
+        return $review;
+    }
+    
+    private function importReviewComments($review, $indata, $entityManager)
+    {
+        $data = $this->getColumnsByTableName('T_REVIEW_COMMENT', $indata);
+        $data['review'] = $review;
+        
+        // Argive comments
+        if ($data['user_name=argive'] != null) {
+            $data['user_name'] = 'argive';
+            $data['is_user_anonymity_requested'] = false;
+            $data['comment'] = $data['user_name=argive'];
+            
+            $query = $entityManager->createQuery('SELECT c FROM Application\Entity\ReviewComment c WHERE c.review =:review AND c.userName = :userName');
+            $query->setParameters(array(
+                'review'   => $review,
+                'userName' => 'argive'
+            ));
+            
+            $comments = $query->getResult();
+            
+            // Take first comment
+            // Take first state code
+            if (sizeof($comments) > 0) {
+                $comment = $comments[0];
+            } else {
+                $comment = new ReviewComment();
+            }
+            
+            $comment->exchangeData($data, $entityManager);
+            $entityManager->persist($comment);
+            $entityManager->flush();
+        }
+        
+        // Agency response
+        if ($data['user_name=agency_response'] != null) {
+            $data['user_name'] = 'agency_response';
+            $data['is_user_anonymity_requested'] = false;
+            $data['comment'] = $data['user_name=agency_response'];
+            
+            $query = $entityManager->createQuery('SELECT c FROM Application\Entity\ReviewComment c WHERE c.review =:review AND c.userName = :userName');
+            $query->setParameters(array(
+                'review'   => $review,
+                'userName' => 'agency_response'
+            ));
+            
+            $comments = $query->getResult();
+            
+            // Take first comment
+            // Take first state code
+            if (sizeof($comments) > 0) {
+                $comment = $comments[0];
+            } else {
+                $comment = new ReviewComment();
+            }
+            
+            $comment->exchangeData($data, $entityManager);
+            $entityManager->persist($comment);
+            $entityManager->flush();
+        }
     }
 }

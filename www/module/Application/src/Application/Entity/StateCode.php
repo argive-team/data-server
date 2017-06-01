@@ -1,6 +1,7 @@
 <?php
 namespace Application\Entity;
 
+use Application\Utilility\Replace;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -20,11 +21,14 @@ class StateCode
     /** @ORM\Column(length=2) */
     protected $state;
     
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(type="integer", nullable=true) */
     protected $year;
     
     /** @ORM\Column(length=2048) */
     protected $title;
+    
+    /** @ORM\Column(length=255) */
+    protected $article;
     
     /** @ORM\Column(length=255) */
     protected $part;
@@ -35,7 +39,7 @@ class StateCode
     /** @ORM\Column(name="file_name", length=255) */
     protected $fileName;
     
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(type="integer", nullable=true) */
     protected $wordcount;
     
     /** @ORM\Column(length=255) */
@@ -56,22 +60,22 @@ class StateCode
     /** @ORM\Column(type="integer", nullable=true) */
     protected $shall;
     
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(type="integer", nullable=true) */
     protected $must;
     
-    /** @ORM\Column(name="may_not", type="integer") */
+    /** @ORM\Column(name="may_not", type="integer", nullable=true) */
     protected $mayNot;
     
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(type="integer", nullable=true) */
     protected $required;
     
-    /** @ORM\Column(type="integer") */
+    /** @ORM\Column(type="integer", nullable=true) */
     protected $prohibited;
     
-    /** @ORM\Column(name="restrictions_total", type="integer") */
+    /** @ORM\Column(name="restrictions_total", type="integer", nullable=true) */
     protected $restrictionsTotal;
     
-    /** @ORM\Column(name="date_updated", type="datetime", options={"default":"CURRENT_TIMESTAMP"}) */
+    /** @ORM\Column(name="date_updated", type="datetime", nullable=true, options={"default":"CURRENT_TIMESTAMP"}) */
     protected $dateUpdated;
     
     public function __construct()
@@ -103,7 +107,12 @@ class StateCode
     {
         return $this->title;
     }
-
+    
+    public function getArticle()
+    {
+        return $this->article;
+    }
+    
     public function getPart()
     {
         return $this->part;
@@ -198,7 +207,12 @@ class StateCode
     {
         $this->title = $title;
     }
-
+    
+    public function setArticle($article)
+    {
+        $this->article = $article;
+    }
+    
     public function setPart($part)
     {
         $this->part = $part;
@@ -274,6 +288,30 @@ class StateCode
         $this->dateUpdated = $dateUpdated;
     }
     
+    public function exchangeData($data = array(), $entityManager)
+    {
+        $this->documentTitle = Replace::replaceNullWithAlt($data['document_title'], '');
+        $this->state = Replace::replaceNullWithAlt($data['state'], '');
+        $this->year = $data['year'];
+        $this->title = Replace::replaceNullWithAlt($data['title'], '');
+        $this->article = Replace::replaceNullWithAlt($data['article'], '');
+        $this->part = Replace::replaceNullWithAlt($data['part'], '');
+        $this->chapter = Replace::replaceNullWithAlt($data['chapter'], '');
+        $this->fileName = Replace::replaceNullWithAlt($data['file_name'], '');
+        $this->wordcount = $data['wordcount'];
+        $this->section = Replace::replaceNullWithAlt($data['section'], '');
+        $this->regNumber = Replace::replaceNullWithAlt($data['reg_number'], '');
+        $this->division = Replace::replaceNullWithAlt($data['division'], '');
+        //$this->agency = $data['agency'];
+        $this->shall = $data['shall'];
+        $this->must = $data['must'];
+        $this->mayNot = $data['mayNot'];
+        $this->required = $data['required'];
+        $this->prohibited = $data['prohibited'];
+        $this->restrictionsTotal = $data['restrictions_total'];
+        $this->dateUpdated= Replace::replaceNullWithAlt(\DateTime::createFromFormat('Y-m-d H:i:s', $data['date_updated']), new \DateTime());
+    }
+    
     public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)
     {
         $worksheet->setCellValue('A1', 'id');
@@ -281,21 +319,22 @@ class StateCode
         $worksheet->setCellValue('C1', 'state');
         $worksheet->setCellValue('D1', 'year');
         $worksheet->setCellValue('E1', 'title');
-        $worksheet->setCellValue('F1', 'part');
-        $worksheet->setCellValue('G1', 'chapter');
-        $worksheet->setCellValue('H1', 'file_name');
-        $worksheet->setCellValue('I1', 'wordcount');
-        $worksheet->setCellValue('J1', 'section');
-        $worksheet->setCellValue('K1', 'reg_number');
-        $worksheet->setCellValue('L1', 'division');
-        $worksheet->setCellValue('M1', 'agency_id');
-        $worksheet->setCellValue('N1', 'shall');
-        $worksheet->setCellValue('O1', 'must');
-        $worksheet->setCellValue('P1', 'may_not');
-        $worksheet->setCellValue('Q1', 'required');
-        $worksheet->setCellValue('R1', 'prohibited');
-        $worksheet->setCellValue('S1', 'restrictions_total');
-        $worksheet->setCellValue('T1', 'date_updated');
+        $worksheet->setCellValue('F1', 'article');
+        $worksheet->setCellValue('G1', 'part');
+        $worksheet->setCellValue('H1', 'chapter');
+        $worksheet->setCellValue('I1', 'file_name');
+        $worksheet->setCellValue('J1', 'wordcount');
+        $worksheet->setCellValue('K1', 'section');
+        $worksheet->setCellValue('L1', 'reg_number');
+        $worksheet->setCellValue('M1', 'division');
+        $worksheet->setCellValue('N1', 'agency_id');
+        $worksheet->setCellValue('O1', 'shall');
+        $worksheet->setCellValue('P1', 'must');
+        $worksheet->setCellValue('Q1', 'may_not');
+        $worksheet->setCellValue('R1', 'required');
+        $worksheet->setCellValue('S1', 'prohibited');
+        $worksheet->setCellValue('T1', 'restrictions_total');
+        $worksheet->setCellValue('U1', 'date_updated');
     }
     
     public function setPHPExelRow(\PHPExcel_Worksheet $worksheet, $row)
@@ -305,20 +344,21 @@ class StateCode
         $worksheet->setCellValue('C' . $row, $this->getState());
         $worksheet->setCellValue('D' . $row, $this->getYear());
         $worksheet->setCellValue('E' . $row, $this->getTitle());
-        $worksheet->setCellValue('F' . $row, $this->getPart());
-        $worksheet->setCellValue('G' . $row, $this->getChapter());
-        $worksheet->setCellValue('H' . $row, $this->getFileName());
-        $worksheet->setCellValue('I' . $row, $this->getWordcount());
-        $worksheet->setCellValue('J' . $row, $this->getSection());
-        $worksheet->setCellValue('K' . $row, $this->getRegNumber());
-        $worksheet->setCellValue('L' . $row, $this->getDivision());
-        $worksheet->setCellValue('M' . $row, (is_null($this->getAgency()) ? '' : $this->getAgency()->getId()));
-        $worksheet->setCellValue('N' . $row, $this->getShall());
-        $worksheet->setCellValue('O' . $row, $this->getMust());
-        $worksheet->setCellValue('P' . $row, $this->getMayNot());
-        $worksheet->setCellValue('Q' . $row, $this->getRequired());
-        $worksheet->setCellValue('R' . $row, $this->getProhibited());
-        $worksheet->setCellValue('S' . $row, $this->getRestrictionsTotal());
-        $worksheet->setCellValue('T' . $row, $this->getDateUpdated()->format('Y-m-d H:i:s'));
+        $worksheet->setCellValue('F' . $row, $this->getArticle());
+        $worksheet->setCellValue('G' . $row, $this->getPart());
+        $worksheet->setCellValue('H' . $row, $this->getChapter());
+        $worksheet->setCellValue('I' . $row, $this->getFileName());
+        $worksheet->setCellValue('J' . $row, $this->getWordcount());
+        $worksheet->setCellValue('K' . $row, $this->getSection());
+        $worksheet->setCellValue('L' . $row, $this->getRegNumber());
+        $worksheet->setCellValue('M' . $row, $this->getDivision());
+        $worksheet->setCellValue('N' . $row, (is_null($this->getAgency()) ? '' : $this->getAgency()->getId()));
+        $worksheet->setCellValue('O' . $row, $this->getShall());
+        $worksheet->setCellValue('P' . $row, $this->getMust());
+        $worksheet->setCellValue('Q' . $row, $this->getMayNot());
+        $worksheet->setCellValue('R' . $row, $this->getRequired());
+        $worksheet->setCellValue('S' . $row, $this->getProhibited());
+        $worksheet->setCellValue('T' . $row, $this->getRestrictionsTotal());
+        $worksheet->setCellValue('U' . $row, $this->getDateUpdated()->format('Y-m-d H:i:s'));
     }
 }
