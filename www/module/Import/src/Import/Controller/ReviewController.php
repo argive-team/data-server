@@ -179,12 +179,14 @@ class ReviewController extends AbstractActionController
                 $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
                 $data = array_combine($rowHeader[0], $rowData[0]);
                 
-                $cfr = $this->importCfr($data, $this->em);
+                $cfrs = $this->importCfrs($data, $this->em);
                 $statute = $this->importStatute($data, $this->em);
                 $stateCode = $this->importStateCode($data, $this->em);
                 $municipalCode = $this->importMunicipalCode($data, $this->em);
-                $review = $this->importReview($data, $cfr, $statute, $stateCode, $municipalCode, $this->em);
-                $this->importReviewComments($review, $data, $this->em);
+                $feedbacks = $this->importFeedbacks($data, $this->em);
+                $actions = $this->importActions($data, $this->em);
+                $impactTags = $this->importImpactTags($data, $this->em);
+                $review = $this->importReview($data, $cfrs, $statute, $stateCode, $municipalCode, $feedbacks, $actions, $impactTags, $this->em);
             }
             
             rename($inputFileName, $completedDir . '/' . basename($inputFileName));
@@ -207,44 +209,57 @@ class ReviewController extends AbstractActionController
         return $data;
     }
     
-    private function importCfr($indata, $entityManager)
+    private function importCfrs($indata, $entityManager)
     {
         $data = $this->getColumnsByTableName('T_CFR', $indata);
         
-        $cfr = null;
+        $cfrs = new \Doctrine\Common\Collections\ArrayCollection();
         
-        if ($data['id'] != null) {
-            $cfr= $entityManager->find('Application\Entity\Cfr', $data['id']);
+        if ($indata['T_REVIEW_has_T_CFR.cfr_id'] != null) {
+            $ids = explode(',', $indata['T_REVIEW_has_T_CFR.cfr_id']);
             
-            if (is_null($cfr)) {
-                // [TODO: Log error.  Invalid T_CFR.id.]
+            for ($i=0; $i<sizeof($ids); $i++) {
+                if (!empty($id[$i])) {
+                    $cfr = $entityManager->find('Application\Entity\Cfr', trim($ids[$i]));
+                    
+                    if (is_null($cfr)) {
+                        // [TODO: Log error.  Invalid T_CFR.id.]
+                    } else {
+                        $cfrs->add($cfr);
+                    }
+                }
+            }
+        } else if ($data['cfr_title'] != null && $data['cfr_part'] != null) {
+            $parts = explode(',', $data['cfr_part']);
+            
+            for ($i=0; $i<sizeof($parts); $i++) {
+                if (!empty($parts[$i])) {
+                    $data['cfr_part'] = trim($parts[$i]);
+                    $query = $entityManager->createQuery('SELECT c FROM Application\Entity\Cfr c WHERE c.cfrTitle = :title AND c.cfrPart = :part');
+                    $query->setParameters(array(
+                        'title'   => Replace::replaceNullWithAlt($data['cfr_title'], ''),
+                        'part'    => Replace::replaceNullWithAlt($data['cfr_part'], '')
+                    ));
+                    $results = $query->getResult();
+                    
+                    // Take first CFR.  There should be only one.
+                    if (sizeof($results) > 0) {
+                        $cfr = $results[0];
+                    } else {
+                        $cfr = new Cfr();
+                    }
+                    
+                    $cfr->exchangeData($data, $entityManager);
+                    $entityManager->persist($cfr);
+                    $entityManager->flush();
+                    
+                    $cfrs->add($cfr);
+                }
             }
             
-            $cfr->exchangeData($data, $entityManager);
-            $entityManager->persist($cfr);
-            $entityManager->flush();
-        } else if ($data['cfr_title'] != null || $data['cfr_part'] != null || $data['subpart'] != null) {
-            $query = $entityManager->createQuery('SELECT c FROM Application\Entity\Cfr c WHERE c.cfrTitle = :title AND c.cfrPart = :part AND c.subpart = :subpart');
-            $query->setParameters(array(
-                'title'   => Replace::replaceNullWithAlt($data['cfr_title'], ''),
-                'part'    => Replace::replaceNullWithAlt($data['cfr_part'], ''),
-                'subpart' => Replace::replaceNullWithAlt($data['subpart'], '')
-            ));
-            $cfrs = $query->getResult();
-            
-            // Take first CFR
-            if (sizeof($cfrs) > 0) {
-                $cfr = $cfrs[0];
-            } else {
-                $cfr = new Cfr();
-            }
-            
-            $cfr->exchangeData($data, $entityManager);
-            $entityManager->persist($cfr);
-            $entityManager->flush();
         }
         
-        return $cfr;
+        return $cfrs;
     }
     
     private function importStatute($indata, $entityManager)
@@ -253,16 +268,12 @@ class ReviewController extends AbstractActionController
         
         $statute = null;
         
-        if ($data['id'] != null) {
-            $statute= $entityManager->find('Application\Entity\Statute', $data['id']);
+        if ($indata['T_REVIEW.statute_id'] != null) {
+            $statute= $entityManager->find('Application\Entity\Statute', $indata['T_REVIEW.statute_id']);
             
             if (is_null($statute)) {
                 // [TODO: Log error.  Invalid T_STATUTE.id.]
             }
-            
-            $statute->exchangeData($data, $entityManager);
-            $entityManager->persist($statute);
-            $entityManager->flush();
         } else if ($data['statute'] != null || $data['statute_description'] != null || $data['statute_jurisdiction'] != null || $data['state'] != null) {
             $query = $entityManager->createQuery('SELECT s FROM Application\Entity\Statute s WHERE s.statute = :statute AND s.statuteDescription = :description AND s.statuteJurisdiction = :jurisdiction AND s.state = :state');
             $query->setParameters(array(
@@ -294,16 +305,12 @@ class ReviewController extends AbstractActionController
         
         $stateCode = null;
         
-        if ($data['id'] != null) {
-            $stateCode= $entityManager->find('Application\Entity\StateCode', $data['id']);
+        if ($indata['T_REVIEW.state_code_id'] != null) {
+            $stateCode = $entityManager->find('Application\Entity\StateCode', $indata['T_REVIEW.state_code_id']);
             
             if (is_null($stateCode)) {
                 // [TODO: Log error.  Invalid T_STATE_CODE.id.]
             }
-            
-            $stateCode->exchangeData($data, $entityManager);
-            $entityManager->persist($stateCode);
-            $entityManager->flush();
         } else if ($data['state'] != null || $data['title'] != null || $data['division'] != null || $data['chapter'] != null || $data['part'] != null || $data['article'] != null || $data['section'] != null) {
             $query = $entityManager->createQuery('SELECT s FROM Application\Entity\StateCode s WHERE s.state = :state AND s.title = :title AND s.division = :division AND s.chapter = :chapter AND s.part = :part AND s.article = :article AND s.section = :section');
             $query->setParameters(array(
@@ -338,16 +345,12 @@ class ReviewController extends AbstractActionController
         
         $municipalCode = null;
         
-        if ($data['id'] != null) {
-            $municipalCode = $entityManager->find('Application\Entity\MunicipalCode', $data['id']);
+        if ($indata['T_REVIEW.municipal_code_id'] != null) {
+            $municipalCode = $entityManager->find('Application\Entity\MunicipalCode', $indata['T_REVIEW.municipal_code_id']);
             
             if (is_null($municipalCode)) {
                 // [TODO: Log error.  Invalid T_MUNICIPAL_CODE.id.]
             }
-            
-            $municipalCode->exchangeData($data, $entityManager);
-            $entityManager->persist($municipalCode);
-            $entityManager->flush();
         } else if ($data['state'] != null || $data['municipality'] != null || $data['title'] != null) {
             $query = $entityManager->createQuery('SELECT m FROM Application\Entity\MunicipalCode m WHERE m.state = :state AND m.municipality = :municipality AND m.title = :title');
             $query->setParameters(array(
@@ -372,13 +375,79 @@ class ReviewController extends AbstractActionController
         return $municipalCode;
     }
     
-    private function importReview($indata, $cfr, $statute, $stateCode, $municipalCode, $entityManager)
+    private function importFeedbacks($indata, $entityManager)
+    {
+        $feedbacks = new \Doctrine\Common\Collections\ArrayCollection();
+        
+        if ($indata['T_REVIEW_has_T_FEEDBACK_CD.feedback_key'] != null) {
+            $keys = explode(',', $indata['T_REVIEW_has_T_FEEDBACK_CD.feedback_key']);
+            
+            for ($i=0; $i<sizeof($keys); $i++) {
+                $feedback = $entityManager->find('Application\Entity\Feedback', trim($keys[$i]));
+                
+                if (is_null($feedback)) {
+                    // [TODO: Log error.  Invalid feedback key.]
+                } else {
+                    $feedbacks->add($feedback);
+                }
+            }
+        }
+        
+        return $feedbacks;
+    }
+    
+    private function importActions($indata, $entityManager)
+    {
+        $actions = new \Doctrine\Common\Collections\ArrayCollection();
+        
+        if ($indata['T_REVIEW_has_T_ACTION_CD.action_key'] != null) {
+            $keys = explode(',', $indata['T_REVIEW_has_T_ACTION_CD.action_key']);
+            
+            for ($i=0; $i<sizeof($keys); $i++) {
+                $action = $entityManager->find('Application\Entity\Action', trim($keys[$i]));
+                
+                if (is_null($action)) {
+                    // [TODO: Log error.  Invalid action key.]
+                } else {
+                    $actions->add($action);
+                }
+            }
+        }
+        
+        return $actions;
+    }
+    
+    private function importImpactTags($indata, $entityManager)
+    {
+        $impactTags = new \Doctrine\Common\Collections\ArrayCollection();
+        
+        if ($indata['T_REVIEW_has_T_ACTION_CD.action_key'] != null) {
+            $tags = explode(',', $indata['T_REVIEW_has_T_ACTION_CD.action_key']);
+            
+            for ($i=0; $i<sizeof($tags); $i++) {
+                $impactTag = $entityManager->find('Application\Entity\ImpactTag', trim($tags[$i]));
+                
+                if (is_null($impactTag)) {
+                    // [TODO: Log error.  Invalid impact tag.]
+                } else {
+                    $impactTags->add($impactTag);
+                }
+            }
+        }
+        
+        return $impactTags;
+    }
+    
+    private function importReview($indata, $cfrs, $statute, $stateCode, $municipalCode, $feedbacks, $actions, $impactTags, $entityManager)
     {
         $data = $this->getColumnsByTableName('T_REVIEW', $indata);
-        $data['cfr'] = $cfr;
+        $data['cfrs'] = $cfrs;
         $data['statute'] = $statute;
         $data['stateCode'] = $stateCode;
         $data['municipalCode'] = $municipalCode;
+        $data['feedbacks'] = $feedbacks;
+        $data['actions'] = $actions;
+        $data['impactTags'] = $impactTags;
         
         $review = null;
         
@@ -400,6 +469,9 @@ class ReviewController extends AbstractActionController
         return $review;
     }
     
+    /*
+     * @Deprecated.  Decided to move to future UI for commenting on reviews.
+     */
     private function importReviewComments($review, $indata, $entityManager)
     {
         $data = $this->getColumnsByTableName('T_REVIEW_COMMENT', $indata);

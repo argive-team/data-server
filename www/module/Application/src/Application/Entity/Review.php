@@ -12,6 +12,8 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Review
 {
+    const ANONYMITY_PRIVATE_STRING = "PRIVATE";
+    
     /** @ORM\Id @ORM\GeneratedValue(strategy="AUTO") @ORM\Column(type="integer") */
     protected $id;
     
@@ -19,10 +21,13 @@ class Review
     protected $isReviewed;
     
     /**
-     * @ORM\ManyToOne(targetEntity="Cfr", fetch="EAGER")
-     * @ORM\JoinColumn(name="cfr_id", referencedColumnName="id")
+     * @ORM\ManyToMany(targetEntity="Cfr", fetch="EAGER")
+     * @ORM\JoinTable(name="T_REVIEW_has_T_CFR",
+     *      joinColumns={@ORM\JoinColumn(name="review_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="cfr_id", referencedColumnName="id")}
+     *      )
      */
-    protected $cfr;
+    protected $cfrs;
     
     /** @ORM\Column(name="federal_register_id", type="integer", nullable=true) */
     protected $federalRegisterId;
@@ -142,6 +147,7 @@ class Review
     {
         date_default_timezone_set('UTC');
         
+        $this->cfrs = new \Doctrine\Common\Collections\ArrayCollection();
         $this->feedbacks = new \Doctrine\Common\Collections\ArrayCollection();
         $this->actions = new \Doctrine\Common\Collections\ArrayCollection();
         $this->impactTags = new \Doctrine\Common\Collections\ArrayCollection();
@@ -157,9 +163,9 @@ class Review
         return $this->isReviewed;
     }
 
-    public function getCfr()
+    public function getCfrs()
     {
-        return $this->cfr;
+        return $this->cfrs;
     }
 
     public function getFederalRegisterId()
@@ -194,11 +200,27 @@ class Review
 
     public function getFirstName()
     {
+        if (!empty($this->firstName)) {
+            if ($this->getIsUserAnonymityRequested()) {
+                return self::ANONYMITY_PRIVATE_STRING;
+            } else {
+                return $this->firstName;
+            }
+        }
+        
         return $this->firstName;
     }
 
     public function getLastName()
     {
+        if (!empty($this->lastName)) {
+            if ($this->getIsUserAnonymityRequested()) {
+                return self::ANONYMITY_PRIVATE_STRING;
+            } else {
+                return $this->lastName;
+            }
+        }
+        
         return $this->lastName;
     }
 
@@ -209,6 +231,14 @@ class Review
 
     public function getBusinessName()
     {
+        if (!empty($this->businessName)) {
+            if ($this->getIsBusinessAnonymityRequested()) {
+                return self::ANONYMITY_PRIVATE_STRING;
+            } else {
+                return $this->businessName;
+            }
+        }
+        
         return $this->businessName;
     }
 
@@ -219,6 +249,14 @@ class Review
 
     public function getOrganizationName()
     {
+        if (!empty($this->organizationName)) {
+            if ($this->getIsOrganizationAnonymityRequested()) {
+                return self::ANONYMITY_PRIVATE_STRING;
+            } else {
+                return $this->organizationName;
+            }
+        }
+        
         return $this->organizationName;
     }
 
@@ -229,6 +267,14 @@ class Review
 
     public function getZipcode()
     {
+        if (!empty($this->zipcode)) {
+            if ($this->getIsZipcodeAnonymityRequested()) {
+                return self::ANONYMITY_PRIVATE_STRING;
+            } else {
+                return $this->zipcode;
+            }
+        }
+        
         return $this->zipcode;
     }
 
@@ -239,6 +285,14 @@ class Review
 
     public function getEmail()
     {
+        if (!empty($this->email)) {
+            if ($this->getIsEmailAnonymityRequested()) {
+                return self::ANONYMITY_PRIVATE_STRING;
+            } else {
+                return $this->email;
+            }
+        }
+        
         return $this->email;
     }
 
@@ -302,9 +356,9 @@ class Review
         $this->isReviewed = $isReviewed;
     }
 
-    public function setCfr($cfr)
+    public function setCfrs($cfrs)
     {
-        $this->cfr = $cfr;
+        $this->cfrs = $cfrs;
     }
 
     public function setFederalRegisterId($federalRegisterId)
@@ -442,26 +496,49 @@ class Review
         $this->impactTiming = $impactTiming;
     }
     
+    private function isPrivateData($value)
+    {
+        $data = strtolower(trim($value));
+        
+        if ($data == strtolower(self::ANONYMITY_PRIVATE_STRING)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     public function exchangeData($data = array(), $entityManager)
     {
         $this->isReviewed = ($data['is_reviewed'] == null ? 0 : 1);
-        $this->cfr = $data['cfr'];
+        $this->cfrs = $data['cfrs'];
         $this->federalRegisterId = $data['federal_register_id'];
         $this->stateCode = $data['stateCode'];
         $this->municipalCode = $data['municipalCode'];
         $this->statute = $data['statute'];
         $this->commentAt = Replace::replaceNullWithAlt(\DateTime::createFromFormat('Y-m-d H:i:s', $data['comment_at']), new \DateTime());
         $this->userType = Replace::replaceNullWithAlt($data['user_type'], 'BUSINESS_OWNER');
-        $this->firstName = Replace::replaceNullWithAlt($data['first_name'], '');
-        $this->lastName = Replace::replaceNullWithAlt($data['last_name'], '');
+        if (!$this->isPrivateData($data['first_name'])) {
+            $this->firstName = Replace::replaceNullWithAlt($data['first_name'], '');
+        }
+        if (!$this->isPrivateData($data['last_name'])) {
+            $this->lastName = Replace::replaceNullWithAlt($data['last_name'], '');
+        }
         $this->isUserAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_user_anonymity_requested']);
-        $this->businessName = Replace::replaceNullWithAlt($data['business_name'], '');
+        if (!$this->isPrivateData($data['business_name'])) {
+            $this->businessName = Replace::replaceNullWithAlt($data['business_name'], '');
+        }
         $this->isBusinessAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_business_anonymity_requested']);
-        $this->organizationName = Replace::replaceNullWithAlt($data['organization_name'], '');
+        if (!$this->isPrivateData($data['organization_name'])) {
+            $this->organizationName = Replace::replaceNullWithAlt($data['organization_name'], '');
+        }
         $this->isOrganizationAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_organization_anonymity_requested']);
-        $this->zipcode = Replace::replaceNullWithAlt($data['zipcode'], '');
+        if (!$this->isPrivateData($data['zipcode'])) {
+            $this->zipcode = Replace::replaceNullWithAlt($data['zipcode'], '');
+        }
         $this->isZipcodeAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_zipcode_anonymity_requested']);
-        $this->email = Replace::replaceNullWithAlt($data['email'], '');
+        if (!$this->isPrivateData($data['email'])) {
+            $this->email = Replace::replaceNullWithAlt($data['email'], '');
+        }
         $this->isEmailAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_email_anonymity_requested']);
         $this->numFteUsEmployees = $data['num_fte_us_employees'];
         
@@ -478,45 +555,9 @@ class Review
         $this->suggestedAction = Replace::replaceNullWithAlt($data['suggested_action'], '');
         $this->complaintStatus = Replace::replaceNullWithAlt($data['complaint_status'], 'OPEN');
         $this->origin = Replace::replaceNullWithAlt($data['origin'], 'USER');
-        
-        $this->feedbacks->clear();
-        if (!empty($data['feedback_key'])) {
-            $codes = explode(',', $data['feedback_key']);
-            foreach ($codes as $code) {
-                // [TODO: Is there exception to catch if fail?]
-                $feedback = $entityManager->find('Application\Entity\Feedback', $code);
-                // [TODO: Log invalid code]
-                if (!is_null($feedback)) {
-                    $this->feedbacks->add($feedback);
-                }
-            }
-        }
-        
-        $this->actions->clear();
-        if (!empty($data['action_key'])) {
-            $codes = explode(',', $data['action_key']);
-            foreach ($codes as $code) {
-                // [TODO: Is there exception to catch if fail?]
-                $action = $entityManager->find('Application\Entity\Action', $code);
-                // [TODO: Log invalid code]
-                if (!is_null($action)) {
-                    $this->actions->add($action);
-                }
-            }
-        }
-        
-        $this->impactTags->clear();
-        if (!empty($data['impact_key'])) {
-            $tags = explode(',', $data['impact_key']);
-            foreach ($tags as $tag) {
-                // [TODO: Is there exception to catch if fail?]
-                $impact = $entityManager->find('Application\Entity\ImpactTag', $tag);
-                // [TODO: Log invalid impact key]
-                if (!is_null($impact)) {
-                    $this->impactTags->add($impact);
-                }
-            }
-        }
+        $this->feedbacks = $data['feedbacks'];
+        $this->actions = $data['actions'];
+        $this->impactTags = $data['impactTags'];
         
         if (empty($data['impact_timing_key'])) {
             $this->impactTiming = null;
@@ -562,7 +603,7 @@ class Review
             'Action Tags',
             'Origin',
             'Impact Timing',
-            'Impact Tags',
+            'Impact Tags' /*,
             'Argive Comments',
             'Agency Response (free text)',
             'Statute ID',
@@ -588,7 +629,7 @@ class Review
             'Municipal Code Id',
             'Municipal Code',
             'Municipal State',
-            'Municipality'
+            'Municipality' */
         );
     }
     
@@ -624,7 +665,7 @@ class Review
             'T_REVIEW.action_key',
             'T_REVIEW.origin',
             'T_REVIEW.impact_timing_key',
-            'T_REVIEW.impact_key',
+            'T_REVIEW.impact_key'  /*,
             'T_REVIEW_COMMENT.user_name=argive',
             'T_REVIEW_COMMENT.user_name=agency_response',
             'T_STATUTE.id',
@@ -650,7 +691,7 @@ class Review
             'T_MUNICIPAL_CODE.id',
             'T_MUNICIPAL_CODE.title',
             'T_MUNICIPAL_CODE.state',
-            'T_MUNICIPAL_CODE.municipality'
+            'T_MUNICIPAL_CODE.municipality' */
         );
     }
     
@@ -698,16 +739,16 @@ class Review
             (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
             (is_null($this->statute) ?  '' : $this->statute->getId()),
             (is_null($this->municipalCode) ?  '' : $this->municipalCode->getId()),
-            $this->firstName,
-            $this->lastName,
+            $this->getFirstName(),
+            $this->getLastName(),
             ($this->isUserAnonymityRequested ? 'Y' : 'N'),
-            $this->businessName,
+            $this->getBusinessName(),
             ($this->isBusinessAnonymityRequested ? 'Y' : 'N'),
-            $this->organizationName,
+            $this->getOrganizationName(),
             ($this->isOrganizationAnonymityRequested ? 'Y' : 'N'),
-            $this->zipcode,
+            $this->getZipcode(),
             ($this->isZipcodeAnonymityRequested ? 'Y' : 'N'),
-            $this->email,
+            $this->getEmail(),
             ($this->isEmailAnonymityRequested ? 'Y' : 'N'),
             $this->numFteUsEmployees,
             $this->complaintStatus,
@@ -719,7 +760,7 @@ class Review
             (count($this->actions) == 0 ? '' : $this->getActionsAsDelimitedStr()),
             $this->origin,
             (is_null($this->impactTiming) ?  '' : $this->impactTiming->getImpactTimingKey()),
-            (count($this->impactTags) == 0 ? '' : $this->getImpactTagsAsDelimitedStr()),
+            (count($this->impactTags) == 0 ? '' : $this->getImpactTagsAsDelimitedStr()) /*,
             'T_REVIEW_COMMENT.user_name=argive',
             'T_REVIEW_COMMENT.user_name=agency_response',
             (is_null($this->statute) ?  '' : $this->statute->getId()),
@@ -745,7 +786,7 @@ class Review
             (is_null($this->municipalCode) ?  '' : $this->municipalCode->getId()),
             (is_null($this->municipalCode) ?  '' : $this->municipalCode->getTitle()),
             (is_null($this->municipalCode) ?  '' : $this->municipalCode->getState()),
-            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getMunicipality())
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getMunicipality()) */
         );
     }
 }
