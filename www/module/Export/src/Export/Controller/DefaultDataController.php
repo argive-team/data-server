@@ -48,6 +48,12 @@ class DefaultDataController extends AbstractActionController
         $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
         $this->writeToWorksheet($worksheet, $agencies);
         
+        // Cfrs
+        $cfrs = $this->em->getRepository('Application\Entity\Cfr')->findAll();
+        $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'CFRs');
+        $objPHPExcel->addSheet($worksheet, ++$worksheetIndex);
+        $this->writeToWorksheet($worksheet, $cfrs);
+        
         // Feedback keys
         $feedbacks = $this->em->getRepository('Application\Entity\Feedback')->findAll();
         $worksheet = new \PHPExcel_Worksheet($objPHPExcel, 'Feedback Keys');

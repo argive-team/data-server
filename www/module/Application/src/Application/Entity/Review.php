@@ -553,7 +553,6 @@ class Review
         
         $this->userComments = Replace::replaceNullWithAlt($data['user_comments'], '');
         $this->suggestedAction = Replace::replaceNullWithAlt($data['suggested_action'], '');
-        $this->complaintStatus = Replace::replaceNullWithAlt($data['complaint_status'], 'OPEN');
         $this->origin = Replace::replaceNullWithAlt($data['origin'], 'USER');
         $this->feedbacks = $data['feedbacks'];
         $this->actions = $data['actions'];
@@ -575,14 +574,8 @@ class Review
             'Argive Reviewed and Approved?',
             'Review Comment ID',
             'User Type',
-            'CFR Id',
-            'Federal Register ID',
-            'State Code ID',
-            'Statute ID',
-            'Municipal Code ID',
             'First Name',
             'Last Name',
-            'Anonymity Name Value',
             'Name anonymity requested?',
             'Business Name',
             'Company name anonymity requested?',
@@ -593,17 +586,21 @@ class Review
             'Email',
             'Email Anonymity',
             '# of FTE US Employees',
-            'Complaint Status',
-            'Rule Status',
             'Timestamp (when was comment entered?)',
             'NAICS_max',
-            'Feedback Tags',
             'Submittor Comments (Free Text)',
             'Suggested Action (Free text)',
-            'Action Tags',
             'Origin',
+            'Federal Register ID',
+            'State Code ID',
+            'Statute ID',
+            'Municipal Code ID',
+            'CFR Id\'s',
+            'Feedback Tags',
+            'Action Tags',
             'Impact Timing',
-            'Impact Tags' /*,
+            'Impact Tags'
+            /*,
             'Argive Comments',
             'Agency Response (free text)',
             'Statute ID',
@@ -639,11 +636,6 @@ class Review
             'T_REVIEW.is_reviewed',
             'T_REVIEW.id',
             'T_REVIEW.user_type',
-            'T_REVIEW.cfr_id',
-            'T_REVIEW.federal_register_id',
-            'T_REVIEW.state_code_id',
-            'T_REVIEW.statute_id',
-            'T_REVIEW.municipal_code_id',
             'T_REVIEW.first_name',
             'T_REVIEW.last_name',
             'T_REVIEW.is_user_anonymity_requested',
@@ -656,16 +648,21 @@ class Review
             'T_REVIEW.email',
             'T_REVIEW.is_email_anonymity_requested',
             'T_REVIEW.num_fte_us_employees',
-            'T_REVIEW.complaint_status',
             'T_REVIEW.comment_at',
             'T_REVIEW.NAICS_code',
-            'T_REVIEW.feedback_key',
             'T_REVIEW.user_comments',
             'T_REVIEW.suggested_action',
-            'T_REVIEW.action_key',
             'T_REVIEW.origin',
+            'T_REVIEW.federal_register_id',
+            'T_REVIEW.state_code_id',
+            'T_REVIEW.statute_id',
+            'T_REVIEW.municipal_code_id',
+            'T_REVIEW.cfr_id',
+            'T_REVIEW_has_T_FEEDBACK_CD.feedback_key',
+            'T_REVIEW_has_T_ACTION_CD.action_key',
             'T_REVIEW.impact_timing_key',
-            'T_REVIEW.impact_key'  /*,
+            'T_REVIEW_has_T_IMPACT_TAG.impact_key'
+            /*,
             'T_REVIEW_COMMENT.user_name=argive',
             'T_REVIEW_COMMENT.user_name=agency_response',
             'T_STATUTE.id',
@@ -693,6 +690,17 @@ class Review
             'T_MUNICIPAL_CODE.state',
             'T_MUNICIPAL_CODE.municipality' */
         );
+    }
+    
+    private function getCfrsAsDelimitedStr()
+    {
+        $result = '';
+        
+        foreach ($this->cfrs as $cfr) {
+            $result .= $cfr->getId() . ',';
+        }
+        
+        return rtrim($result, ',');
     }
     
     private function getFeedbacksAsDelimitedStr()
@@ -734,11 +742,6 @@ class Review
             $this->isReviewed,
             $this->id,
             $this->userType,
-            (is_null($this->cfr) ?  '' : $this->cfr->getId()),
-            $this->federalRegisterId,
-            (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
-            (is_null($this->statute) ?  '' : $this->statute->getId()),
-            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getId()),
             $this->getFirstName(),
             $this->getLastName(),
             ($this->isUserAnonymityRequested ? 'Y' : 'N'),
@@ -751,16 +754,22 @@ class Review
             $this->getEmail(),
             ($this->isEmailAnonymityRequested ? 'Y' : 'N'),
             $this->numFteUsEmployees,
-            $this->complaintStatus,
             $this->commentAt->format('Y-m-d H:i:s'),
             (is_null($this->naics) ? '' : $this->naics->getNAICSCode()),
-            (count($this->feedbacks) == 0 ? '' : $this->getFeedbacksAsDelimitedStr()),
             $this->userComments,
             $this->suggestedAction,
-            (count($this->actions) == 0 ? '' : $this->getActionsAsDelimitedStr()),
             $this->origin,
+            $this->federalRegisterId,
+            (is_null($this->stateCode) ?  '' : $this->stateCode->getId()),
+            (is_null($this->statute) ?  '' : $this->statute->getId()),
+            (is_null($this->municipalCode) ?  '' : $this->municipalCode->getId()),
+            (count($this->cfrs) > 0 ?  $this->getCfrsAsDelimitedStr() : ''),
+            (count($this->feedbacks) == 0 ? '' : $this->getFeedbacksAsDelimitedStr()),
+            (count($this->actions) == 0 ? '' : $this->getActionsAsDelimitedStr()),
             (is_null($this->impactTiming) ?  '' : $this->impactTiming->getImpactTimingKey()),
-            (count($this->impactTags) == 0 ? '' : $this->getImpactTagsAsDelimitedStr()) /*,
+            (count($this->impactTags) == 0 ? '' : $this->getImpactTagsAsDelimitedStr()),
+            
+            /*,
             'T_REVIEW_COMMENT.user_name=argive',
             'T_REVIEW_COMMENT.user_name=agency_response',
             (is_null($this->statute) ?  '' : $this->statute->getId()),
