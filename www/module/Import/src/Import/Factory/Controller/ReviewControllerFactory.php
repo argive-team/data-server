@@ -10,6 +10,9 @@ class ReviewControllerFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $container)
     {
         $parentLocator = $container->getServiceLocator();
+        
+        $request = $parentLocator->get('Request');
+        
         $config = $parentLocator->get('Config');
         $em = $parentLocator->get('doctrine.entitymanager.orm_default');
         

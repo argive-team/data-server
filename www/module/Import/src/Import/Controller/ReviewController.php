@@ -219,7 +219,7 @@ class ReviewController extends AbstractActionController
             $ids = explode(',', $indata['T_REVIEW_has_T_CFR.cfr_id']);
             
             for ($i=0; $i<sizeof($ids); $i++) {
-                if (!empty($id[$i])) {
+                if (!empty($ids[$i])) {
                     $cfr = $entityManager->find('Application\Entity\Cfr', trim($ids[$i]));
                     
                     if (is_null($cfr)) {
@@ -256,7 +256,6 @@ class ReviewController extends AbstractActionController
                     $cfrs->add($cfr);
                 }
             }
-            
         }
         
         return $cfrs;

@@ -517,29 +517,47 @@ class Review
         $this->statute = $data['statute'];
         $this->commentAt = Replace::replaceNullWithAlt(\DateTime::createFromFormat('Y-m-d H:i:s', $data['comment_at']), new \DateTime());
         $this->userType = Replace::replaceNullWithAlt($data['user_type'], 'BUSINESS_OWNER');
-        if (!$this->isPrivateData($data['first_name'])) {
-            $this->firstName = Replace::replaceNullWithAlt($data['first_name'], '');
+        
+        if ($data['first_name'] == null) {
+            $this->firstName = '';
+        } else if (!$this->isPrivateData($data['first_name'])) {
+            $this->firstName = $data['first_name'];
         }
-        if (!$this->isPrivateData($data['last_name'])) {
-            $this->lastName = Replace::replaceNullWithAlt($data['last_name'], '');
+        if ($data['last_name'] == null) {
+            $this->lastName= '';
+        } else if (!$this->isPrivateData($data['last_name'])) {
+            $this->lastName= $data['last_name'];
         }
         $this->isUserAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_user_anonymity_requested']);
-        if (!$this->isPrivateData($data['business_name'])) {
-            $this->businessName = Replace::replaceNullWithAlt($data['business_name'], '');
+        
+        if ($data['business_name'] == null) {
+            $this->businessName= '';
+        } else if (!$this->isPrivateData($data['business_name'])) {
+            $this->businessName= $data['business_name'];
         }
         $this->isBusinessAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_business_anonymity_requested']);
-        if (!$this->isPrivateData($data['organization_name'])) {
-            $this->organizationName = Replace::replaceNullWithAlt($data['organization_name'], '');
+        
+        if ($data['organization_name'] == null) {
+            $this->organizationName= '';
+        } else if (!$this->isPrivateData($data['organization_name'])) {
+            $this->organizationName= $data['organization_name'];
         }
         $this->isOrganizationAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_organization_anonymity_requested']);
-        if (!$this->isPrivateData($data['zipcode'])) {
-            $this->zipcode = Replace::replaceNullWithAlt($data['zipcode'], '');
+        
+        if ($data['zipcode'] == null) {
+            $this->zipcode= '';
+        } else if (!$this->isPrivateData($data['zipcode'])) {
+            $this->zipcode= $data['zipcode'];
         }
         $this->isZipcodeAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_zipcode_anonymity_requested']);
-        if (!$this->isPrivateData($data['email'])) {
-            $this->email = Replace::replaceNullWithAlt($data['email'], '');
+        
+        if ($data['email'] == null) {
+            $this->email= '';
+        } else if (!$this->isPrivateData($data['email'])) {
+            $this->email= $data['email'];
         }
         $this->isEmailAnonymityRequested = Replace::replaceEmptyAnonymity($data['is_email_anonymity_requested']);
+        
         $this->numFteUsEmployees = $data['num_fte_us_employees'];
         
         if (empty($data['NAICS_code'])) {
@@ -553,6 +571,7 @@ class Review
         
         $this->userComments = Replace::replaceNullWithAlt($data['user_comments'], '');
         $this->suggestedAction = Replace::replaceNullWithAlt($data['suggested_action'], '');
+        $this->complaintStatus = Replace::replaceNullWithAlt($data['complaint_status'], 'OPEN');
         $this->origin = Replace::replaceNullWithAlt($data['origin'], 'USER');
         $this->feedbacks = $data['feedbacks'];
         $this->actions = $data['actions'];
@@ -657,7 +676,7 @@ class Review
             'T_REVIEW.state_code_id',
             'T_REVIEW.statute_id',
             'T_REVIEW.municipal_code_id',
-            'T_REVIEW.cfr_id',
+            'T_REVIEW_has_T_CFR.cfr_id',
             'T_REVIEW_has_T_FEEDBACK_CD.feedback_key',
             'T_REVIEW_has_T_ACTION_CD.action_key',
             'T_REVIEW.impact_timing_key',
