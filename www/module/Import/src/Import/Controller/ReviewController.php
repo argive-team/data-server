@@ -48,7 +48,7 @@ class ReviewController extends AbstractActionController
         // Settings
         $uploadDir = $config['argive']['reviews']['upload_dir'];
         $cleanupTargetDir = $config['argive']['reviews']['cleanup_dir']; // Remove old files
-        $maxFileAge = 5 * 3600;   // Temp file age in seconds
+        $maxFileAge = 365 * 31 * 24 * 60 * 60;   // Temp file age in seconds
         
         // Get a file name
         if (isset($_REQUEST["name"])) {
