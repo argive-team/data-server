@@ -16,7 +16,7 @@ class ReviewComment
     protected $id;
     
     /**
-     * @ORM\ManyToOne(targetEntity="Review", fetch="EAGER")
+     * @ORM\ManyToOne(targetEntity="Review", inversedBy="reviewComments", fetch="EAGER")
      * @ORM\JoinColumn(name="review_id", referencedColumnName="id", nullable=false)
      */
     protected $review;

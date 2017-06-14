@@ -143,6 +143,11 @@ class Review
      */
     protected $impactTiming;
     
+    /**
+     * @ORM\OneToMany(targetEntity="ReviewComment", mappedBy="review", fetch="EAGER")
+     */
+    protected $reviewComments;
+    
     public function __construct()
     {
         date_default_timezone_set('UTC');
@@ -151,6 +156,7 @@ class Review
         $this->feedbacks = new \Doctrine\Common\Collections\ArrayCollection();
         $this->actions = new \Doctrine\Common\Collections\ArrayCollection();
         $this->impactTags = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->reviewComments = new \Doctrine\Common\Collections\ArrayCollection();
     }
     
     public function getId()
@@ -351,6 +357,11 @@ class Review
         return $this->impactTiming;
     }
     
+    public function getReviewComments()
+    {
+        return $this->reviewComments;
+    }
+    
     public function setIsReviewed($isReviewed)
     {
         $this->isReviewed = $isReviewed;
@@ -494,6 +505,11 @@ class Review
     public function setImpactTiming($impactTiming)
     {
         $this->impactTiming = $impactTiming;
+    }
+    
+    public function setReviewComments($reviewComments)
+    {
+        $this->reviewComments = $reviewComments;
     }
     
     private function isPrivateData($value)

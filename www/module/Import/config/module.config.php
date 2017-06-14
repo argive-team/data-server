@@ -29,6 +29,7 @@ return array(
                     // as you solidify the routes for your module, however,
                     // you may want to remove it and replace it with more
                     // specific routes.
+                    /*
                     'default' => array(
                         'type'    => 'Segment',
                         'options' => array(
@@ -41,6 +42,46 @@ return array(
                             ),
                         ),
                     ),
+                    */
+                    'review-upload' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '/review/upload',
+                            'defaults' => array(
+                                'action' => 'upload'
+                            )
+                        )
+                    ),
+                    'review-import' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '/review/import',
+                            'defaults' => array(
+                                'action' => 'import'
+                            )
+                        )
+                    ),
+                    'history' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '/history',
+                            'defaults' => array(
+                                'action' => 'history'
+                            )
+                        )
+                    ),
+                    'history-details' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '/history/details/:id',
+                            'defaults' => array(
+                                'action' => 'history-details'
+                            ),
+                            'constraints' => array(
+                                'id' => '\d+'
+                            )
+                        )
+                    )
                 ),
             ),
         ),

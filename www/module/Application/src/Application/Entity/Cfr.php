@@ -258,7 +258,7 @@ class Cfr
         $this->codeLink = Replace::replaceNullWithAlt($data['code_link'], '');
         $this->cfrTitleDescription = Replace::replaceNullWithAlt($data['cfr_title_description'], '');
         $this->regulatoryCodeDescription = Replace::replaceNullWithAlt($data['regulatory_code_description'], '');
-        $this->dateUpdated= new \DateTime();
+        $this->dateUpdated = new \DateTime();
     }
     
     public function setPHPExcelColumnHeader(\PHPExcel_Worksheet $worksheet)

@@ -20,11 +20,19 @@ use Application\Entity\StateCode;
 use Application\Entity\Statute;
 use Application\Utilility\Replace;
 use Application\Entity\ReviewComment;
+use Application\Utilility\Logger;
+use Application\Entity\ImportHistoryItem;
+use Application\Entity\Feedback;
+use Application\Entity\Action;
+use Application\Entity\ImpactTag;
+use Application\Entity\ImportHistory;
+use Zend\View\Model\ViewModel;
 
 class ReviewController extends AbstractActionController
 {
     protected $config;
     protected $em;
+    protected $logger;
     
     public function __construct($config, $em)
     {
@@ -32,13 +40,14 @@ class ReviewController extends AbstractActionController
         
         $this->config = $config;
         $this->em = $em;
+        $this->logger = new Logger($em);
     }
     
     public function indexAction()
     {
         return array();
     }
-
+    
     public function uploadAction()
     {
         $request = $this->getRequest();
@@ -175,19 +184,24 @@ class ReviewController extends AbstractActionController
             $highestColumn = $sheet->getHighestColumn();
             $rowHeader = $sheet->rangeToArray('A2:' . $highestColumn . 2);
             
+            $importHistory = $this->logger->logImportHistory(ImportHistory::TYPE_REVIEW, basename($inputFileName), $highestRow - 2, 0, 0, 0);
+            
             for ($row = 3; $row <= $highestRow; $row++) {
                 $rowData = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row);
                 $data = array_combine($rowHeader[0], $rowData[0]);
                 
-                $cfrs = $this->importCfrs($data, $this->em);
-                $statute = $this->importStatute($data, $this->em);
-                $stateCode = $this->importStateCode($data, $this->em);
-                $municipalCode = $this->importMunicipalCode($data, $this->em);
-                $feedbacks = $this->importFeedbacks($data, $this->em);
-                $actions = $this->importActions($data, $this->em);
-                $impactTags = $this->importImpactTags($data, $this->em);
-                $review = $this->importReview($data, $cfrs, $statute, $stateCode, $municipalCode, $feedbacks, $actions, $impactTags, $this->em);
+                $cfrs = $this->importCfrs($data, $this->em, $row, $importHistory);
+                $statute = $this->importStatute($data, $this->em, $row, $importHistory);
+                $stateCode = $this->importStateCode($data, $this->em, $row, $importHistory);
+                $municipalCode = $this->importMunicipalCode($data, $this->em, $row, $importHistory);
+                $feedbacks = $this->importFeedbacks($data, $this->em, $row, $importHistory);
+                $actions = $this->importActions($data, $this->em, $row, $importHistory);
+                $impactTags = $this->importImpactTags($data, $this->em, $row, $importHistory);
+                $review = $this->importReview($data, $cfrs, $statute, $stateCode, $municipalCode, $feedbacks, $actions, $impactTags, $this->em, $row, $importHistory);
             }
+            
+            $this->em->persist($importHistory);
+            $this->em->flush();
             
             rename($inputFileName, $completedDir . '/' . basename($inputFileName));
         }
@@ -209,7 +223,7 @@ class ReviewController extends AbstractActionController
         return $data;
     }
     
-    private function importCfrs($indata, $entityManager)
+    private function importCfrs($indata, $entityManager, $row, $importHistory)
     {
         $data = $this->getColumnsByTableName('T_CFR', $indata);
         
@@ -223,7 +237,9 @@ class ReviewController extends AbstractActionController
                     $cfr = $entityManager->find('Application\Entity\Cfr', trim($ids[$i]));
                     
                     if (is_null($cfr)) {
-                        // [TODO: Log error.  Invalid T_CFR.id.]
+                        $this->logger->logImportHistoryItem(
+                            $importHistory, 'T_REVIEW_has_T_CFR.cfr_id: ' . trim($ids[$i]), Cfr::class, $row, ImportHistoryItem::E_INVALID_ID
+                        );
                     } else {
                         $cfrs->add($cfr);
                     }
@@ -261,7 +277,7 @@ class ReviewController extends AbstractActionController
         return $cfrs;
     }
     
-    private function importStatute($indata, $entityManager)
+    private function importStatute($indata, $entityManager, $row, $importHistory)
     {
         $data = $this->getColumnsByTableName('T_STATUTE', $indata);
         
@@ -271,7 +287,9 @@ class ReviewController extends AbstractActionController
             $statute= $entityManager->find('Application\Entity\Statute', $indata['T_REVIEW.statute_id']);
             
             if (is_null($statute)) {
-                // [TODO: Log error.  Invalid T_STATUTE.id.]
+                $this->logger->logImportHistoryItem(
+                    $importHistory, 'Invalid T_REVIEW.statute_id: ' . $indata['T_REVIEW.statute_id'], Statute::class, $row, ImportHistoryItem::E_INVALID_ID
+                );
             }
         } else if ($data['statute'] != null || $data['statute_description'] != null || $data['statute_jurisdiction'] != null || $data['state'] != null) {
             $query = $entityManager->createQuery('SELECT s FROM Application\Entity\Statute s WHERE s.statute = :statute AND s.statuteDescription = :description AND s.statuteJurisdiction = :jurisdiction AND s.state = :state');
@@ -298,7 +316,7 @@ class ReviewController extends AbstractActionController
         return $statute;
     }
     
-    private function importStateCode($indata, $entityManager)
+    private function importStateCode($indata, $entityManager, $row, $importHistory)
     {
         $data = $this->getColumnsByTableName('T_STATE_CODE', $indata);
         
@@ -308,7 +326,9 @@ class ReviewController extends AbstractActionController
             $stateCode = $entityManager->find('Application\Entity\StateCode', $indata['T_REVIEW.state_code_id']);
             
             if (is_null($stateCode)) {
-                // [TODO: Log error.  Invalid T_STATE_CODE.id.]
+                $this->logger->logImportHistoryItem(
+                    $importHistory, 'Invalid T_REVIEW.state_code_id: ' . $indata['T_REVIEW.state_code_id'], StateCode::class, $row, ImportHistoryItem::E_INVALID_ID
+                );
             }
         } else if ($data['state'] != null || $data['title'] != null || $data['division'] != null || $data['chapter'] != null || $data['part'] != null || $data['article'] != null || $data['section'] != null) {
             $query = $entityManager->createQuery('SELECT s FROM Application\Entity\StateCode s WHERE s.state = :state AND s.title = :title AND s.division = :division AND s.chapter = :chapter AND s.part = :part AND s.article = :article AND s.section = :section');
@@ -338,7 +358,7 @@ class ReviewController extends AbstractActionController
         return $stateCode;
     }
     
-    private function importMunicipalCode($indata, $entityManager)
+    private function importMunicipalCode($indata, $entityManager, $row, $importHistory)
     {
         $data = $this->getColumnsByTableName('T_MUNICIPAL_CODE', $indata);
         
@@ -348,7 +368,9 @@ class ReviewController extends AbstractActionController
             $municipalCode = $entityManager->find('Application\Entity\MunicipalCode', $indata['T_REVIEW.municipal_code_id']);
             
             if (is_null($municipalCode)) {
-                // [TODO: Log error.  Invalid T_MUNICIPAL_CODE.id.]
+                $this->logger->logImportHistoryItem(
+                    $importHistory, 'Invalid T_REVIEW.municipal_code_id: ' . $indata['T_REVIEW.municipal_code_id'], MunicipalCode::class, $row, ImportHistoryItem::E_INVALID_ID
+                );
             }
         } else if ($data['state'] != null || $data['municipality'] != null || $data['title'] != null) {
             $query = $entityManager->createQuery('SELECT m FROM Application\Entity\MunicipalCode m WHERE m.state = :state AND m.municipality = :municipality AND m.title = :title');
@@ -374,20 +396,24 @@ class ReviewController extends AbstractActionController
         return $municipalCode;
     }
     
-    private function importFeedbacks($indata, $entityManager)
+    private function importFeedbacks($indata, $entityManager, $row, $importHistory)
     {
         $feedbacks = new \Doctrine\Common\Collections\ArrayCollection();
         
         if ($indata['T_REVIEW_has_T_FEEDBACK_CD.feedback_key'] != null) {
-            $keys = explode(',', $indata['T_REVIEW_has_T_FEEDBACK_CD.feedback_key']);
+            $keys = explode(',', rtrim($indata['T_REVIEW_has_T_FEEDBACK_CD.feedback_key'], ','));
             
             for ($i=0; $i<sizeof($keys); $i++) {
-                $feedback = $entityManager->find('Application\Entity\Feedback', trim($keys[$i]));
-                
-                if (is_null($feedback)) {
-                    // [TODO: Log error.  Invalid feedback key.]
-                } else {
-                    $feedbacks->add($feedback);
+                if (!empty($keys[$i])) {
+                    $feedback = $entityManager->find('Application\Entity\Feedback', trim($keys[$i]));
+                    
+                    if (is_null($feedback)) {
+                        $this->logger->logImportHistoryItem(
+                            $importHistory, 'Invalid T_REVIEW_has_T_FEEDBACK_CD.feedback_key: ' . trim($keys[$i]), Feedback::class, $row, ImportHistoryItem::E_INVALID_ID
+                        );
+                    } else {
+                        $feedbacks->add($feedback);
+                    }
                 }
             }
         }
@@ -395,20 +421,24 @@ class ReviewController extends AbstractActionController
         return $feedbacks;
     }
     
-    private function importActions($indata, $entityManager)
+    private function importActions($indata, $entityManager, $row, $importHistory)
     {
         $actions = new \Doctrine\Common\Collections\ArrayCollection();
         
         if ($indata['T_REVIEW_has_T_ACTION_CD.action_key'] != null) {
-            $keys = explode(',', $indata['T_REVIEW_has_T_ACTION_CD.action_key']);
+            $keys = explode(',', rtrim($indata['T_REVIEW_has_T_ACTION_CD.action_key'], ','));
             
             for ($i=0; $i<sizeof($keys); $i++) {
-                $action = $entityManager->find('Application\Entity\Action', trim($keys[$i]));
-                
-                if (is_null($action)) {
-                    // [TODO: Log error.  Invalid action key.]
-                } else {
-                    $actions->add($action);
+                if (!empty($keys[$i])) {
+                    $action = $entityManager->find('Application\Entity\Action', trim($keys[$i]));
+                    
+                    if (is_null($action)) {
+                        $this->logger->logImportHistoryItem(
+                            $importHistory, 'Invalid T_REVIEW_has_T_ACTION_CD.action_key: ' . trim($keys[$i]), Action::class, $row, ImportHistoryItem::E_INVALID_ID
+                        );
+                    } else {
+                        $actions->add($action);
+                    }
                 }
             }
         }
@@ -416,18 +446,20 @@ class ReviewController extends AbstractActionController
         return $actions;
     }
     
-    private function importImpactTags($indata, $entityManager)
+    private function importImpactTags($indata, $entityManager, $row, $importHistory)
     {
         $impactTags = new \Doctrine\Common\Collections\ArrayCollection();
         
-        if ($indata['T_REVIEW_has_T_ACTION_CD.action_key'] != null) {
-            $tags = explode(',', $indata['T_REVIEW_has_T_ACTION_CD.action_key']);
+        if ($indata['T_REVIEW_has_T_IMPACT_TAG.impact_key'] != null) {
+            $tags = explode(',', rtrim($indata['T_REVIEW_has_T_IMPACT_TAG.impact_key'], ','));
             
             for ($i=0; $i<sizeof($tags); $i++) {
                 $impactTag = $entityManager->find('Application\Entity\ImpactTag', trim($tags[$i]));
                 
                 if (is_null($impactTag)) {
-                    // [TODO: Log error.  Invalid impact tag.]
+                    $this->logger->logImportHistoryItem(
+                        $importHistory, 'Invalid T_REVIEW_has_T_IMPACT_TAG.impact_key: ' . $indata['T_REVIEW_has_T_IMPACT_TAG.impact_key'], ImpactTag::class, $row, ImportHistoryItem::E_INVALID_ID
+                    );
                 } else {
                     $impactTags->add($impactTag);
                 }
@@ -437,7 +469,7 @@ class ReviewController extends AbstractActionController
         return $impactTags;
     }
     
-    private function importReview($indata, $cfrs, $statute, $stateCode, $municipalCode, $feedbacks, $actions, $impactTags, $entityManager)
+    private function importReview($indata, $cfrs, $statute, $stateCode, $municipalCode, $feedbacks, $actions, $impactTags, $entityManager, $row, $importHistory)
     {
         $data = $this->getColumnsByTableName('T_REVIEW', $indata);
         $data['cfrs'] = $cfrs;
@@ -454,7 +486,14 @@ class ReviewController extends AbstractActionController
             $review = $entityManager->find('Application\Entity\Review', $data['id']);
             
             if (is_null($review)) {
-                // [TODO: Log error.  Invalid T_REVIEW.id.]
+                $this->logger->logImportHistoryItem(
+                    $importHistory, 'Invalid T_REVIEW.id: ' . $data['id'], Review::class, $row, ImportHistoryItem::E_INVALID_ID
+                );
+                $importHistory->incrementFailed();
+                
+                return null;
+            } else {
+                $importHistory->incrementUpdated();
             }
         }
         
@@ -464,6 +503,8 @@ class ReviewController extends AbstractActionController
         $review->exchangeData($data, $entityManager);
         $entityManager->persist($review);
         $entityManager->flush();
+        
+        $importHistory->incrementSucceeded();
         
         return $review;
     }
@@ -529,5 +570,25 @@ class ReviewController extends AbstractActionController
             $entityManager->persist($comment);
             $entityManager->flush();
         }
+    }
+    
+    public function historyAction()
+    {
+        $query = $this->em->createQuery('SELECT h FROM Application\Entity\ImportHistory h ORDER BY h.importAt DESC');
+        $importHistory = $query->getResult();
+        
+        return new ViewModel(array(
+            'importHistory' => $importHistory
+        ));
+    }
+    
+    public function historyDetailsAction()
+    {
+        $id = $this->params()->fromRoute('id');
+        $importHistory = $this->em->find('Application\Entity\ImportHistory', $id);
+        
+        return new ViewModel(array(
+            'importHistoryItems' => $importHistory->getImportHistoryItems()
+        ));
     }
 }

@@ -1,0 +1,41 @@
+<?php 
+$title = 'Import History';
+$this->headtitle($title . ' | ');
+?>
+<h3><?php echo $this->escapehtml($title); ?></h3>
+
+<table class="table">
+	<thead class="thead-inverse">
+		<tr>
+			<th>File Name</th>
+			<th>Total</th>
+			<th>Succeeded</th>
+			<th>Updated</th>
+			<th>Failed</th>
+			<th>Import Date</th>
+			<th>Errors</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach ($importHistory as $history) {
+		    $tz = new DateTimeZone('America/Los_Angeles');
+		    $importDate = $history->getImportAt();
+		    $importDate->setTimezone($tz);
+		?>
+		<tr>
+			<td><?= $history->getFileName(); ?></td>
+			<td><?= $history->getTotal(); ?></td>
+			<td><?= $history->getSucceeded(); ?></td>
+			<td><?= $history->getUpdated(); ?></td>
+			<td><?= $history->getFailed(); ?></td>
+			<td><?= $importDate->format('Y-m-d H:i A') ; ?></td>
+			<td>
+				<?php if (count($history->getImportHistoryItems()) > 0) {
+				?>
+				<a href="/import/history/details/<?= $history->getId(); ?>">View</a>
+				<?php } ?>
+			</td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>

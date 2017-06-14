@@ -1,0 +1,26 @@
+<?php 
+$title = 'Import History Details';
+$this->headtitle($title . ' | ');
+?>
+<h3><?php echo $this->escapehtml($title); ?></h3>
+
+<table class="table">
+	<thead class="thead-inverse">
+		<tr>
+			<th>Message</th>
+			<th>Entity</th>
+			<th>Line</th>
+			<th>Severity</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?php foreach ($importHistoryItems as $item) { ?>
+		<tr>
+			<td><?= $item->getMessage(); ?></td>
+			<td><?= $item->getEntity(); ?></td>
+			<td><?= $item->getLine(); ?></td>
+			<td><?= $item->getSeverity(); ?></td>
+		</tr>
+		<?php } ?>
+	</tbody>
+</table>
