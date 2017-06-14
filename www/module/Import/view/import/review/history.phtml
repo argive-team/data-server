@@ -28,7 +28,7 @@ $this->headtitle($title . ' | ');
 			<td><?= $history->getSucceeded(); ?></td>
 			<td><?= $history->getUpdated(); ?></td>
 			<td><?= $history->getFailed(); ?></td>
-			<td><?= $importDate->format('Y-m-d H:i A') ; ?></td>
+			<td><?= $importDate->format('Y-m-d h:i A') ; ?></td>
 			<td>
 				<?php if (count($history->getImportHistoryItems()) > 0) {
 				?>
