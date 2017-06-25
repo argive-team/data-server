@@ -12,6 +12,7 @@ namespace Import\Controller;
 use PHPExcel_IOFactory;
 use Zend\Http\Response;
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\Session\Container;
 
 use Application\Entity\Cfr;
 use Application\Entity\MunicipalCode;
@@ -55,8 +56,16 @@ class ReviewController extends AbstractActionController
         $config = $this->config;
         
         // Settings
-        $uploadDir = $config['argive']['reviews']['upload_dir'];
-        $cleanupTargetDir = $config['argive']['reviews']['cleanup_dir']; // Remove old files
+        $session = new Container('user');
+        $environment = $session->offsetGet('environment');
+        if (empty($environment) || $environment == 'production') {
+            $uploadDir = $config['argive']['production']['reviews']['upload_dir'];
+            $cleanupTargetDir = $config['argive']['production']['reviews']['cleanup_dir'];
+        } else {
+            $uploadDir = $config['argive']['development']['reviews']['upload_dir'];
+            $cleanupTargetDir = $config['argive']['development']['reviews']['cleanup_dir'];
+        }
+        
         $maxFileAge = 365 * 31 * 24 * 60 * 60;   // Temp file age in seconds
         
         // Get a file name
@@ -162,8 +171,16 @@ class ReviewController extends AbstractActionController
         $config = $this->config;
         
         // Settings
-        $uploadDir = $config['argive']['reviews']['upload_dir'];
-        $completedDir = $config['argive']['reviews']['completed_dir'];
+        $session = new Container('user');
+        $environment = $session->offsetGet('environment');
+        if (empty($environment) || $environment == 'production') {
+            $uploadDir = $config['argive']['production']['reviews']['upload_dir'];
+            $completedDir = $config['argive']['production']['reviews']['completed_dir'];
+        } else {
+            $uploadDir = $config['argive']['development']['reviews']['upload_dir'];
+            $completedDir = $config['argive']['development']['reviews']['completed_dir'];
+        }
+        
         $sheetIndex = 0;
         
         $files = glob($uploadDir . DIRECTORY_SEPARATOR . '*.[cC][sS][vV]', GLOB_BRACE);

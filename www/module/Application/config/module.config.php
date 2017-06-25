@@ -20,6 +20,11 @@ return array(
                 'drivers' => array(
                     'Application\Entity' => 'application_entities'
                 )
+            ),
+            'orm_development' => array(
+                'drivers' => array(
+                    'Application\Entity' => 'application_entities'
+                )
             )
         )
     ),
@@ -51,6 +56,15 @@ return array(
                 ),
                 'may_terminate' => true,
                 'child_routes' => array(
+                    'change-env' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '/index/change-env',
+                            'defaults' => array(
+                                'action' => 'change-env'
+                            )
+                        )
+                    ), /*
                     'default' => array(
                         'type'    => 'Segment',
                         'options' => array(
@@ -62,7 +76,7 @@ return array(
                             'defaults' => array(
                             ),
                         ),
-                    ),
+                    ), */
                 ),
             ),
         ),
@@ -105,6 +119,9 @@ return array(
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',
+        ),
+        'strategies' => array(
+            'ViewJsonStrategy',
         ),
     ),
     // Placeholder for console routes

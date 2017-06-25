@@ -1,6 +1,12 @@
 <?php 
 $title = 'Import History';
 $this->headtitle($title . ' | ');
+
+$this->inlineScript()->captureStart();
+echo <<<JS
+    var reloadPageOnEnvChange = true;
+JS;
+$this->inlineScript()->captureEnd();
 ?>
 <h3><?php echo $this->escapehtml($title); ?></h3>
 

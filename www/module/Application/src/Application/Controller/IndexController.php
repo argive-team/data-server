@@ -10,6 +10,8 @@
 namespace Application\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\Session\Container;
+use Zend\View\Model\JsonModel;
 use Zend\View\Model\ViewModel;
 
 class IndexController extends AbstractActionController
@@ -17,5 +19,19 @@ class IndexController extends AbstractActionController
     public function indexAction()
     {
         return new ViewModel();
+    }
+    
+    public function changeEnvAction()
+    {
+        $environment= $this->params()->fromPost('environment');
+        
+        $session = new Container('user');
+        $session->offsetSet('environment', $environment);
+        
+        $result = new JsonModel(array(
+            'done' => true,
+        ));
+        
+        return $result;
     }
 }

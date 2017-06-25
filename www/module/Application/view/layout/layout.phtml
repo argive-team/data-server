@@ -1,6 +1,26 @@
 <?php echo $this->doctype(); ?>
 <?php date_default_timezone_set('America/Los_Angeles') ?>
 
+<?php 
+use Zend\Session\Container;
+
+$session = new Container('user');
+$environment = $session->offsetGet('environment');
+if (empty($environment) || $environment == 'production') {
+    $this->inlineScript()->captureStart();
+echo <<<JS
+    $('#environment').prop('checked', true);
+JS;
+    $this->inlineScript()->captureEnd();
+} else {
+    $this->inlineScript()->captureStart();
+    echo <<<JS
+    $('#environment').prop('checked', false);
+JS;
+    $this->inlineScript()->captureEnd();
+}
+?>
+
 <html lang="en">
     <head>
         <meta charset="utf-8">
@@ -14,11 +34,14 @@
         <!-- Le styles -->
         <?php echo $this->headLink(array('rel' => 'shortcut icon', 'type' => 'image/vnd.microsoft.icon', 'href' => $this->basePath() . '/img/favicon.ico'))
                         ->prependStylesheet($this->basePath('css/style.css'))
+                        ->prependStylesheet($this->basePath('css/bootstrap-switch.min.css'))
                         ->prependStylesheet($this->basePath('css/bootstrap-theme.min.css'))
                         ->prependStylesheet($this->basePath('css/bootstrap.min.css')) ?>
 
         <!-- Scripts -->
         <?php echo $this->headScript()
+            ->prependFile($this->basePath('js/initialize-bootstrap-switch.js'))
+            ->prependFile($this->basePath('js/bootstrap-switch.min.js'))
             ->prependFile($this->basePath('js/bootstrap.min.js'))
             ->prependFile($this->basePath('js/jquery.min.js'))
             ->prependFile($this->basePath('js/respond.min.js'), 'text/javascript', array('conditional' => 'lt IE 9',))
@@ -45,6 +68,9 @@
             </div>
         </nav>
         <div class="container">
+        	<div class="well">
+				<input type="checkbox" name="environment" id="environment" checked>
+        	</div>
             <?php echo $this->content; ?>
             <hr>
             <footer>

@@ -22,14 +22,37 @@ return array(
                     'dbname'  => 'ARGIVE',
                     'charset' => 'utf8',
                 )
+            ),
+            'orm_development' => array(
+                'driverClass' => 'Doctrine\DBAL\Driver\PDOMySql\Driver',
+                'params' => array(
+                    'host'    => '127.0.0.1',
+                    'port'    => '3306',
+                    'dbname'  => 'ARGIVE_DEV',
+                    'charset' => 'utf8',
+                )
             )
-        )
+        ),
+        'entitymanager' => array(
+            'orm_development' => array(
+                'connection' => 'orm_development',
+            )
+        ),
     ),
     'argive' => array(
-        'reviews' => array(
-            'upload_dir' => '/home/argive/prod/data-server/www/uploads/reviews',
-            'completed_dir' => '/home/argive/prod/data-server/www/uploads/reviews/completed',
-            'cleanup_dir' => true,
-        )
+        'production' => array(
+            'reviews' => array(
+                'upload_dir' => '/home/argive/prod/data-server/www/uploads/production/reviews',
+                'completed_dir' => '/home/argive/prod/data-server/www/uploads/production/reviews/completed',
+                'cleanup_dir' => true,
+            ),
+        ),
+        'development' => array(
+            'reviews' => array(
+                'upload_dir' => '/home/argive/prod/data-server/www/uploads/development/reviews',
+                'completed_dir' => '/home/argive/prod/data-server/www/uploads/development/reviews/completed',
+                'cleanup_dir' => true,
+            ),
+        ),
     )
 );

@@ -20,6 +20,13 @@ return array(
                     'user'     => 'root',
                     'password' => '',
                 )
+            ),
+            'orm_development' => array(
+                'driverClass' => 'Doctrine\DBAL\Driver\PDOMySql\Driver',
+                'params' => array(
+                    'user'     => 'root',
+                    'password' => '',
+                )
             )
         )
     )
